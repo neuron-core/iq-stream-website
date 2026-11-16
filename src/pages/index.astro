@@ -13,6 +13,7 @@ import RuledGrid from '../components/RuledGrid.astro';
 import Section from '../components/Section.astro';
 import Stat from '../components/Stat.astro';
 import DataPath from '../components/home/DataPath.astro';
+import NeuronIQ from '../components/home/NeuronIQ.astro';
 import ReplayChart from '../components/home/ReplayChart.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import {
@@ -149,6 +150,7 @@ const integration = [
     <Fragment slot="title">Doing one thing is what makes it <em>fast</em>.</Fragment>
     <RuledGrid slot="aside" items={steps} variant="display" numbered />
     <DataPath />
+    <NeuronIQ />
   </Section>
 
   <Section id="replay" tone="ink" eyebrow="Stream replay">

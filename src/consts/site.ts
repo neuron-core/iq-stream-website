@@ -17,6 +17,13 @@ export const CONTACT = {
   href: 'https://form.typeform.com/to/Ba6XOU1t',
 };
 
+/** The Neuron AI professional services IQ-Stream belongs to. */
+export const NEURON_IQ = {
+  name: 'Neuron IQ',
+  label: 'Go to Neuron IQ',
+  href: 'https://neuron-iq.dev',
+};
+
 export const PAGES = {
   home: '/',
   performance: '/performance/',

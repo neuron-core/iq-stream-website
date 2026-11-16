@@ -1,5 +1,5 @@
 ---
-export type ButtonVariant = 'primary' | 'ghost' | 'outline';
+export type ButtonVariant = 'primary' | 'dark' | 'ghost' | 'outline';
 
 interface Props {
   href: string;
@@ -51,6 +51,16 @@ const external = /^https?:\/\//.test(href);
     &:hover {
       background: var(--accent-hover);
       color: var(--on-accent);
+    }
+  }
+
+  .btn--dark {
+    background: var(--ink);
+    color: var(--paper);
+
+    &:hover {
+      background: var(--graphite);
+      color: var(--paper);
     }
   }
 

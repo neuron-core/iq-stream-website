@@ -1,7 +1,7 @@
 ---
 import Button from './Button.astro';
 import Logo from './Logo.astro';
-import { CONTACT, NAV, PAGES, SITE_NAME } from '../consts/site';
+import { CONTACT, NAV, NEURON_IQ, PAGES, SITE_NAME } from '../consts/site';
 
 const trim = (path: string) => path.replace(/\/$/, '') || '/';
 const current = trim(Astro.url.pathname);
@@ -20,6 +20,9 @@ const current = trim(Astro.url.pathname);
           </li>
         ))
       }
+      <li>
+        <a href={NEURON_IQ.href} target="_blank" rel="noopener">{NEURON_IQ.name}</a>
+      </li>
     </ul>
     <Button href={CONTACT.href} variant="outline" class="header__cta">{CONTACT.label}</Button>
   </nav>
