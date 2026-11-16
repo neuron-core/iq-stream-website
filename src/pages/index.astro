@@ -68,7 +68,11 @@ const savings = [
     title: 'No reconnection logic to build.',
     text: 'No buffering tokens in Redis, no “resume from offset” endpoints, no client-side state machines.',
   },
-  { eyebrow: 'Support', title: 'Fewer support tickets about a UI that keeps breaking.' },
+  {
+    eyebrow: 'Support',
+    title: 'Fewer complaints about a UI that keeps breaking.',
+    text: 'Users can switch between chats and see their agents pick up exactly where they left off.'
+  },
 ];
 
 const contract = [
@@ -176,7 +180,7 @@ const integration = [
   </Section>
 
   <Section id="why" eyebrow="Why it matters for AI products">
-    <Fragment slot="title">What replay <em>saves you</em>.</Fragment>
+    <Fragment slot="title">Built-in streaming <em>replay</em>.</Fragment>
     <FeatureColumns items={savings} />
     <Block lead={`Replay is only half of it. ${SITE_NAME} also guarantees that every browser learns how the answer ended, even one that reconnects too late.`}>
       <Fragment slot="title">A complete contract for <em>every answer</em>.</Fragment>
