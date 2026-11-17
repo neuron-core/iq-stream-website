@@ -1,10 +1,19 @@
 ---
 import LogoMark from '../assets/logo.svg';
+import LogoMarkWhite from '../assets/logo-white.svg';
 import { SITE_NAME } from '../consts/site';
+
+interface Props {
+  /** The white version, for dark backgrounds. */
+  white?: boolean;
+}
+
+const { white = false } = Astro.props;
+const Mark = white ? LogoMarkWhite : LogoMark;
 ---
 
 <span class="logo">
-  <LogoMark class="logo__mark" aria-hidden="true" />
+  <Mark class="logo__mark" aria-hidden="true" />
   <span class="logo__word">{SITE_NAME}</span>
 </span>
 
@@ -24,14 +33,5 @@ import { SITE_NAME } from '../consts/site';
   .logo__mark {
     height: 0.8em;
     width: auto;
-
-    // The file carries the light-theme colours; here the ramp follows the tone instead,
-    // running from the background towards the text colour, then the accent.
-    // The rects come from the SVG file, so they sit outside this component's scope.
-    :global(rect:nth-child(1)) { fill: var(--logo-1); }
-    :global(rect:nth-child(2)) { fill: var(--logo-2); }
-    :global(rect:nth-child(3)) { fill: var(--logo-3); }
-    :global(rect:nth-child(4)) { fill: var(--logo-4); }
-    :global(rect:nth-child(5)) { fill: var(--accent); }
   }
 </style>

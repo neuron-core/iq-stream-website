@@ -9,7 +9,7 @@ const current = trim(Astro.url.pathname);
 
 <header class="header" data-tone="ink">
   <nav class="container header__inner" aria-label="Main">
-    <a class="header__brand" href={PAGES.home} aria-label={`${SITE_NAME} home`}><Logo /></a>
+    <a class="header__brand" href={PAGES.home} aria-label={`${SITE_NAME} home`}><Logo white /></a>
     <ul class="header__links">
       {
         NAV.map(({ href, label }) => (
