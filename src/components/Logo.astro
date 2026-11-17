@@ -1,15 +1,10 @@
 ---
+import LogoMark from '../assets/logo.svg';
 import { SITE_NAME } from '../consts/site';
 ---
 
 <span class="logo">
-  <svg viewBox="0 0 50 20" aria-hidden="true">
-    <rect x="0" y="10" width="10" height="10"></rect>
-    <rect x="10" y="0" width="10" height="10"></rect>
-    <rect x="20" y="10" width="10" height="10"></rect>
-    <rect x="30" y="0" width="10" height="10"></rect>
-    <rect x="40" y="10" width="10" height="10"></rect>
-  </svg>
+  <LogoMark class="logo__mark" aria-hidden="true" />
   <span class="logo__word">{SITE_NAME}</span>
 </span>
 
@@ -26,15 +21,17 @@ import { SITE_NAME } from '../consts/site';
     color: var(--fg1);
   }
 
-  svg {
+  .logo__mark {
     height: 0.8em;
     width: auto;
 
-    // The ramp runs from the background towards the text colour, then the accent.
-    rect:nth-child(1) { fill: var(--logo-1); }
-    rect:nth-child(2) { fill: var(--logo-2); }
-    rect:nth-child(3) { fill: var(--logo-3); }
-    rect:nth-child(4) { fill: var(--logo-4); }
-    rect:nth-child(5) { fill: var(--accent); }
+    // The file carries the light-theme colours; here the ramp follows the tone instead,
+    // running from the background towards the text colour, then the accent.
+    // The rects come from the SVG file, so they sit outside this component's scope.
+    :global(rect:nth-child(1)) { fill: var(--logo-1); }
+    :global(rect:nth-child(2)) { fill: var(--logo-2); }
+    :global(rect:nth-child(3)) { fill: var(--logo-3); }
+    :global(rect:nth-child(4)) { fill: var(--logo-4); }
+    :global(rect:nth-child(5)) { fill: var(--accent); }
   }
 </style>
