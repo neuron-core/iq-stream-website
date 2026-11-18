@@ -153,7 +153,7 @@ const symptoms = [
         <h3>General-purpose servers do not.</h3>
         <p>
           {MERCURE} reached about {formatNumber(MERCURE_TWO_CPUS.eventsPerSecond)} events per second on two
-          CPUs. {listAnd([SOKETI, REVERB_SHORT])}, scaled out the way their documentation describes,
+          CPUs without event history. {listAnd([SOKETI, REVERB_SHORT])}, scaled out the way their documentation describes,
           delivered <em>fewer</em> events than on one CPU, at two to four times the CPU per event, because every event
           has to cross Redis to reach the right process.
         </p>
