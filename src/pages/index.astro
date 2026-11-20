@@ -31,7 +31,7 @@ import {
   TWO_CPU_MULTIPLE,
 } from '../consts/benchmark';
 import { ARCHITECTURES, FRONTEND_PROTOCOLS, LANGUAGES } from '../consts/product';
-import { CONTACT, PAGES, SITE_NAME } from '../consts/site';
+import { GET_STARTED, PAGES, SITE_NAME } from '../consts/site';
 import { asCode, formatNumber, listAnd, listOr } from '../utils/format';
 
 const oneCpu = formatNumber(EVENTS_PER_SECOND.oneCpu);
@@ -130,7 +130,7 @@ const integration = [
     eyebrow={`${SITE_NAME} · one job, done properly`}
     lead={`${SITE_NAME} is a streaming server built for one job: carrying the tokens of an LLM answer from your application backend to your users’ browsers, in real time.`}
     actions={[
-      { ...CONTACT, variant: 'primary' },
+      { ...GET_STARTED, variant: 'primary' },
       { label: 'See the benchmark →', href: PAGES.performance },
     ]}
     metrics={[
@@ -262,7 +262,7 @@ const integration = [
     variant="cta"
     lead={`${SITE_NAME} is the streaming layer AI products should have had from the start: built for tokens, fast on a single CPU, resilient to every dropped connection, and ready to host one app or thousands.`}
     actions={[
-      { ...CONTACT, variant: 'primary' },
+      { ...GET_STARTED, variant: 'primary' },
       { label: 'See the benchmark →', href: PAGES.performance },
       { label: 'For cloud providers →', href: PAGES.cloud },
     ]}

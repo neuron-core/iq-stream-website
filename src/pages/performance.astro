@@ -34,7 +34,7 @@ import {
   TWO_CPUS,
 } from '../consts/benchmark';
 import { LEFT_OUT } from '../consts/product';
-import { CONTACT, PAGES, SITE_NAME } from '../consts/site';
+import { GET_STARTED, PAGES, SITE_NAME } from '../consts/site';
 import { formatNumber, listAnd } from '../utils/format';
 
 const oneCpu = formatNumber(EVENTS_PER_SECOND.oneCpu);
@@ -71,7 +71,7 @@ const symptoms = [
     eyebrow="Performance and scalability"
     lead={`${SITE_NAME} was benchmarked against three of the best-known real-time servers on the exact traffic an AI product generates.`}
     actions={[
-      { ...CONTACT, variant: 'primary' },
+      { ...GET_STARTED, variant: 'primary' },
       { label: 'How we measured →', href: '#benchmark' },
     ]}
     metrics={[
@@ -233,12 +233,12 @@ const symptoms = [
 
   <PageHero
     variant="cta"
-    lead="Ask us to run the benchmark on your own infrastructure."
+    lead={`Create a free account and stream your app’s LLM answers through ${SITE_NAME}.`}
     actions={[
-      { ...CONTACT, variant: 'primary' },
+      { ...GET_STARTED, variant: 'primary' },
       { label: 'For cloud providers →', href: PAGES.cloud },
     ]}
   >
-    <Fragment slot="title">See the numbers for <em>your environment</em>.</Fragment>
+    <Fragment slot="title">Put this performance in front of <em>your users</em>.</Fragment>
   </PageHero>
 </BaseLayout>

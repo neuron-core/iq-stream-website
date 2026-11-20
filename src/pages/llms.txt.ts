@@ -7,7 +7,7 @@ import {
   THROUGHPUT_MULTIPLE,
 } from '../consts/benchmark';
 import { ARCHITECTURES, FRONTEND_PROTOCOLS, LANGUAGES } from '../consts/product';
-import { CONTACT, NAV, PAGES, SITE_NAME, SITE_SUMMARY } from '../consts/site';
+import { CONTACT, GET_STARTED, NAV, PAGES, SITE_NAME, SITE_SUMMARY } from '../consts/site';
 import { formatNumber, listAnd, listOr } from '../utils/format';
 
 // /llms.txt, as proposed at llmstxt.org: a Markdown summary of the site for language models.
@@ -35,6 +35,10 @@ export const GET: APIRoute = ({ site }) => {
 ## Pages
 
 ${NAV.map(({ href, label }) => `- [${label}](${url(href)}): ${about[href]}`).join('\n')}
+
+## Get started
+
+- [${GET_STARTED.label}](${GET_STARTED.href}): Create a free account on the ${SITE_NAME} cloud console.
 
 ## Contact
 

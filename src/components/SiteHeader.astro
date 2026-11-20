@@ -1,7 +1,7 @@
 ---
 import Button from './Button.astro';
 import Logo from './Logo.astro';
-import { CONTACT, NAV, NEURON_IQ, PAGES, SITE_NAME } from '../consts/site';
+import { GET_STARTED, NAV, NEURON_IQ, PAGES, SITE_NAME } from '../consts/site';
 
 const trim = (path: string) => path.replace(/\/$/, '') || '/';
 const current = trim(Astro.url.pathname);
@@ -24,7 +24,9 @@ const current = trim(Astro.url.pathname);
         <a href={NEURON_IQ.href} target="_blank" rel="noopener">{NEURON_IQ.name}</a>
       </li>
     </ul>
-    <Button href={CONTACT.href} variant="outline" class="header__cta">{CONTACT.label}</Button>
+    <Button href={GET_STARTED.href} variant="outline" class="header__cta">
+      <span>{GET_STARTED.short}<span class="header__cta-more">{GET_STARTED.label.slice(GET_STARTED.short.length)}</span></span>
+    </Button>
   </nav>
 </header>
 
@@ -61,6 +63,15 @@ const current = trim(Astro.url.pathname);
   .header__cta {
     grid-area: cta;
     justify-self: end;
+  }
+
+  // Phones get the short label: the full one does not fit beside the brand.
+  .header__cta-more {
+    display: none;
+
+    @include up(sm) {
+      display: inline;
+    }
   }
 
   .header__links {

@@ -12,6 +12,14 @@ export const COVER = {
   alt: 'IQ-Stream: Stream LLM tokens. Nothing else. Better than anything else. 85,000 events per second on one CPU, 0 events lost on reconnect.',
 };
 
+/** The main call to action: a free account on the cloud console. */
+export const GET_STARTED = {
+  label: 'Get started for free',
+  /** The header label on phones, where the full one does not fit beside the brand. */
+  short: 'Get started',
+  href: 'https://app.iq-stream.dev/register',
+};
+
 export const CONTACT = {
   label: 'Talk to us',
   href: 'https://form.typeform.com/to/Ba6XOU1t',

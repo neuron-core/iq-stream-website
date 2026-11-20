@@ -22,7 +22,7 @@ import {
 } from '../consts/benchmark';
 import { ARCHITECTURES, CUSTOMER_STORES } from '../consts/product';
 import { GENERAL_PURPOSE_LIMIT, PLANS, RUNS_ON_ONE_CPU, SIZING } from '../consts/providers';
-import { CONTACT, PAGES, SITE_NAME } from '../consts/site';
+import { GET_STARTED, PAGES, SITE_NAME } from '../consts/site';
 import { asCode, formatNumber, listAnd, listOr } from '../utils/format';
 
 const architectures = listAnd(asCode(ARCHITECTURES));
@@ -93,7 +93,7 @@ const operations = [
     eyebrow="For cloud and infrastructure providers"
     lead="Your customers are building AI products, and every one of them needs to stream tokens to the browser."
     actions={[
-      { ...CONTACT, variant: 'primary' },
+      { ...GET_STARTED, variant: 'primary' },
       { label: 'See the numbers →', href: '#margin' },
     ]}
     metrics={[
@@ -263,7 +263,7 @@ const operations = [
     variant="cta"
     lead="The streaming layer AI products should have had from the start: built for tokens, fast on a single CPU, resilient to every dropped connection, and ready to host one app or thousands."
     actions={[
-      { ...CONTACT, variant: 'primary' },
+      { ...GET_STARTED, variant: 'primary' },
       { label: 'See the benchmark →', href: PAGES.performance },
     ]}
   >
