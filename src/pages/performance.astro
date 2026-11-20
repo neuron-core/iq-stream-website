@@ -10,6 +10,7 @@ import Panel from '../components/Panel.astro';
 import Section from '../components/Section.astro';
 import Stat from '../components/Stat.astro';
 import AgentRun from '../components/performance/AgentRun.astro';
+import CtaBand from '../components/CtaBand.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import {
   BEST_GENERAL_PURPOSE_AT_1000,
@@ -183,6 +184,8 @@ const symptoms = [
       </Grid>
     </Panel>
   </Section>
+
+  <CtaBand>Streaming that gets cheaper per event <em>as it gets busier</em>.</CtaBand>
 
   <Section id="specialization" tone="soft" eyebrow="Specialization vs general purpose">
     <Fragment slot="title">Every AI product streams. The streaming layer was built for <em>something else</em>.</Fragment>

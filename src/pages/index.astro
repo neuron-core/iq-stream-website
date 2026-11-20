@@ -15,6 +15,7 @@ import Stat from '../components/Stat.astro';
 import DataPath from '../components/home/DataPath.astro';
 import NeuronIQ from '../components/home/NeuronIQ.astro';
 import ReplayChart from '../components/home/ReplayChart.astro';
+import CtaBand from '../components/CtaBand.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import {
   COMPETITORS,
@@ -187,6 +188,8 @@ const integration = [
       <RuledGrid items={contract} min="sm" variant="display" />
     </Block>
   </Section>
+
+  <CtaBand>Ship answers that survive <em>every dropped connection</em>.</CtaBand>
 
   <Section id="different" tone="soft" eyebrow="Specialized, not general purpose">
     <Fragment slot="title">Why general-purpose servers can’t do this at {`${SITE_NAME} `}<em>speed</em>.</Fragment>

@@ -10,6 +10,7 @@ import RuledGrid from '../components/RuledGrid.astro';
 import Section from '../components/Section.astro';
 import Stat from '../components/Stat.astro';
 import CostTable from '../components/cloud/CostTable.astro';
+import CtaBand from '../components/CtaBand.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import {
   CPU_ADVANTAGE,
@@ -218,6 +219,8 @@ const operations = [
       </Panel>
     </Grid>
   </Section>
+
+  <CtaBand>Try it on your own apps <em>before you sell it</em>.</CtaBand>
 
   <Section id="operate" tone="soft" eyebrow="Operate it">
     <Fragment slot="title">One Docker image. Running in <em>minutes</em>.</Fragment>
