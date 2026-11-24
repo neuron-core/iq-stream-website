@@ -1,23 +1,23 @@
 import type { Currency } from '../utils/format';
-import { fetchPrices } from '../utils/stripe';
 
-// The pricing page's plans, sizes and competitors. Every amount of ours comes from Stripe at build time,
-// by the lookup keys of the billing spec's catalog. Free costs €0 and has no price in Stripe.
+// The pricing page's plans, sizes and competitors. The page is static: our amounts are written here, by
+// the lookup keys of the billing spec's catalog, so a price changed in Stripe changes here too. Free
+// costs €0.
 
-/** EUR cents before VAT, by lookup key: read from Stripe once per build, when this module first loads. */
-const CENTS = await fetchPrices([
-  'pro_monthly',
-  'pro_annual',
-  'scale_monthly',
-  'scale_annual',
-  'small_aws_monthly',
-  'small_aws_annual',
-  'medium_aws_monthly',
-  'medium_aws_annual',
-  'large_aws_monthly',
-  'large_aws_annual',
-  'overage_aws',
-]);
+/** EUR cents before VAT, by lookup key. */
+const CENTS = {
+  pro_monthly: 1_500,
+  pro_annual: 15_000,
+  scale_monthly: 4_500,
+  scale_annual: 45_000,
+  small_aws_monthly: 9_900,
+  small_aws_annual: 99_000,
+  medium_aws_monthly: 16_900,
+  medium_aws_annual: 169_000,
+  large_aws_monthly: 31_900,
+  large_aws_annual: 319_000,
+  overage_aws: 12,
+} as const;
 
 export type Interval = 'monthly' | 'annual';
 
@@ -129,8 +129,8 @@ export const OVERAGE_CENTS = CENTS.overage_aws;
 export const STREAM_LIMITS = { sizeMiB: 50, minutes: 30, eventKiB: 64 };
 
 /**
- * The months an annual price saves on twelve monthly ones: 2 while Stripe's annual prices are ten
- * monthly ones. The page says it as one number, so the build fails when the prices stop agreeing on it.
+ * The months an annual price saves on twelve monthly ones: 2 while the annual prices are ten monthly
+ * ones. The page says it as one number, so the build fails when the prices stop agreeing on it.
  */
 function monthsFree(): number {
   const counts = new Set(OFFERS.flatMap(({ cents }) => (cents === null ? [] : [12 - cents.annual / cents.monthly])));
@@ -138,7 +138,7 @@ function monthsFree(): number {
 
   if (counts.size !== 1 || !Number.isInteger(count) || count < 1) {
     throw new Error(
-      'Stripe’s annual prices no longer save the same whole number of months on every plan and size: the pricing page’s “months free” needs new copy.',
+      'The annual prices no longer save the same whole number of months on every plan and size: the pricing page’s “months free” needs new copy.',
     );
   }
 
