@@ -1,0 +1,380 @@
+---
+// Pick a number of concurrent streams, 5 to 8,000, and see the plan or size that holds it next to the
+// cheapest Pusher and Mercure tiers for as many connections, with what caps them, and Supabase's free plan
+// where it holds them too. Every competitor price is dated and links to its pricing page.
+import Button from '../Button.astro';
+import Section from '../Section.astro';
+import { GET_STARTED, SITE_NAME } from '../../consts/site';
+import {
+  CHECKED_ON,
+  COMPARED,
+  FREE_PLANS_ONLY,
+  MONTHS_FREE,
+  OFFERS,
+  PRO,
+  SCALE,
+  centsAMonth,
+  perThousand,
+  tierFor,
+  tierPerThousand,
+  type Competitor,
+  type Offer,
+  type SharedPlan,
+} from '../../consts/pricing';
+import {
+  formatCents,
+  formatDate,
+  formatGigabytes,
+  formatMoney,
+  formatNumber,
+  formatRate,
+  formatSource,
+  listAnd,
+  plural,
+} from '../../utils/format';
+
+/** Each choice is one offer's whole capacity, so every choice lands on exactly one of them. */
+const DEFAULT_STREAMS = 2_000;
+
+const checked = `Checked ${formatDate(CHECKED_ON)}`;
+
+const limitsOf = (offer: Offer) =>
+  offer.kind === 'shared'
+    ? `${plural(offer.apps, 'app')} × ${formatNumber(offer.streamsPerApp)} streams, ${offer.subscribersPerStream} subscribers per stream`
+    : `${formatGigabytes(offer.egressGb)} of egress a month included, a dedicated server, private peering`;
+
+const ctaOf = (offer: Offer) => {
+  if (offer.cents === null) {
+    // The full label doesn't fit a quarter of the row, beside three other plans.
+    return GET_STARTED.short;
+  }
+
+  return offer.kind === 'shared' ? `Choose ${offer.name}` : `Request ${offer.name}`;
+};
+
+const theirs = (competitor: Competitor, streams: number) => {
+  const tier = tierFor(competitor, streams);
+  const rate = tier ? tierPerThousand(tier) : null;
+
+  return {
+    competitor,
+    tier,
+    rate: rate === null ? 'Free plan' : `${formatRate(rate, competitor.currency)} per 1,000 connections`,
+  };
+};
+
+const results = OFFERS.map((offer) => {
+  const rate = perThousand(offer, 'monthly');
+
+  return {
+    streams: offer.streams,
+    ours: {
+      offer,
+      kind: offer.kind === 'shared' ? 'Shared region' : 'Private region',
+      price: formatCents(centsAMonth(offer, 'monthly')),
+      annual:
+        offer.cents === null
+          ? 'Personal teams only'
+          : `or ${formatCents(offer.cents.annual)} a year, ${MONTHS_FREE} months free`,
+      rate: rate === null ? 'Free plan' : `${formatRate(rate)} per 1,000 streams`,
+      limits: limitsOf(offer),
+      cta: ctaOf(offer),
+    },
+    theirs: [
+      ...COMPARED.map((competitor) => theirs(competitor, offer.streams)),
+      ...FREE_PLANS_ONLY.map((competitor) => theirs(competitor, offer.streams)).filter(({ tier }) => tier),
+    ],
+  };
+});
+
+const totalOf = ({ name, streams, streamsPerApp, apps }: SharedPlan) =>
+  `${name}’s ${formatNumber(streams)} are ${formatNumber(streamsPerApp)} in each of its ${apps} apps`;
+---
+
+<Section id="compare" eyebrow="Compared">
+  <Fragment slot="title">How many streams do you run <em>at once</em>?</Fragment>
+  <Fragment slot="aside">
+    <p>
+      Pick your peak: the most answers you stream at the same moment. Next to the plan that holds it are the cheapest
+      Pusher and Mercure plans for as many connections, and what caps them.
+    </p>
+    <p>Their prices are a month, before tax, in their own currency, as their pricing pages list them.</p>
+  </Fragment>
+  <div data-picker>
+    <fieldset class="choices">
+      <legend class="label">Concurrent streams</legend>
+      <div class="choices__row">
+        {
+          results.map(({ streams }) => (
+            <label class="choice">
+              <input type="radio" name="streams" value={String(streams)} checked={streams === DEFAULT_STREAMS} />
+              <span>{formatNumber(streams)}</span>
+            </label>
+          ))
+        }
+      </div>
+    </fieldset>
+
+    {
+      results.map(({ streams, ours, theirs }) => (
+        <div class="result" data-streams={String(streams)} hidden={streams !== DEFAULT_STREAMS}>
+          <article class="card card--ours">
+            <p class="eyebrow">
+              {SITE_NAME} · {ours.kind}
+            </p>
+            <h3 class="card__name">{ours.offer.name}</h3>
+            <p class="card__price">
+              {ours.price}
+              <span class="card__per">/ month</span>
+            </p>
+            <p class="card__line">{ours.annual}</p>
+            <p class="card__rate">{ours.rate}</p>
+            <ul class="card__facts">
+              <li>{formatNumber(ours.offer.streams)} concurrent streams</li>
+              <li>{ours.limits}</li>
+              <li class="card__cap">No cap on messages or publishes</li>
+            </ul>
+            <div class="card__foot">
+              <Button href={GET_STARTED.href} variant="primary">
+                {ours.cta}
+              </Button>
+            </div>
+          </article>
+          {theirs.map(({ competitor, tier, rate }) => (
+            <article class="card">
+              <p class="eyebrow">{competitor.name}</p>
+              {tier ? (
+                <>
+                  <h3 class="card__name">{tier.name}</h3>
+                  <p class="card__price">
+                    {formatMoney(tier.monthly, competitor.currency)}
+                    <span class="card__per">/ month</span>
+                  </p>
+                  <p class="card__line">Its cheapest plan for {formatNumber(streams)} connections</p>
+                  <p class="card__rate">{rate}</p>
+                  <ul class="card__facts">
+                    <li>{formatNumber(tier.connections)} concurrent connections</li>
+                    <li class="card__cap">Caps at {tier.cap}</li>
+                  </ul>
+                </>
+              ) : (
+                <p class="card__line">No plan it lists holds {formatNumber(streams)} connections.</p>
+              )}
+              <p class="card__foot card__source">
+                <a href={competitor.url} target="_blank" rel="noopener">
+                  {formatSource(competitor.url)} ↗
+                </a>
+                <span>{checked}</span>
+              </p>
+            </article>
+          ))}
+        </div>
+      ))
+    }
+
+    <div class="notes">
+      <p>
+        Our price is per concurrent stream: one answer being streamed, which several browsers can watch at once.
+        Theirs is per concurrent connection: one connected browser. With one browser per answer, the two counts match.
+      </p>
+      <p>
+        {PRO.name}’s and {SCALE.name}’s streams are totals across apps, since limits are per
+        app: {listAnd([PRO, SCALE].map(totalOf))}.
+      </p>
+    </div>
+  </div>
+</Section>
+
+<script>
+  // Shows the comparison for the number of streams picked.
+  document.querySelectorAll<HTMLElement>('[data-picker]').forEach((picker) => {
+    const show = () => {
+      const picked = picker.querySelector<HTMLInputElement>('input:checked')?.value;
+
+      picker.querySelectorAll<HTMLElement>('[data-streams]').forEach((result) => {
+        result.hidden = result.dataset.streams !== picked;
+      });
+    };
+
+    picker.addEventListener('change', show);
+    show();
+  });
+</script>
+
+<style lang="scss">
+  // The picker: six radios drawn as one row of large numbers.
+  .choices {
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+
+    legend {
+      padding: 0;
+    }
+  }
+
+  // The 1px gaps show the row's background through as hairlines, however the choices wrap.
+  .choices__row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    margin-top: var(--s-3);
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--r-md);
+    background: var(--rule);
+
+    @include up(md) {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+  }
+
+  .choice {
+    position: relative;
+    display: block;
+    padding: var(--s-4) var(--s-3);
+    font-family: var(--font-display);
+    font-size: clamp(22px, 2.4vw, 32px);
+    line-height: var(--lh-display);
+    letter-spacing: var(--tracking-heading);
+    text-align: center;
+    background: var(--bg);
+    color: var(--fg2);
+    cursor: pointer;
+    transition: background-color var(--dur-2) var(--ease-quiet);
+
+    input {
+      position: absolute;
+      inset: 0;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    &:hover {
+      background: var(--bg-hover);
+      color: var(--fg1);
+    }
+
+    &:has(input:checked) {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    &:has(input:focus-visible) {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+  }
+
+  // Phones: one card per row. md: two. lg: every card on one row, three or four of them.
+  .result {
+    display: grid;
+    gap: var(--s-4);
+    margin-top: var(--s-6);
+
+    &[hidden] {
+      display: none;
+    }
+
+    @include up(md) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include up(lg) {
+      grid-template-columns: none;
+      grid-auto-columns: minmax(0, 1fr);
+      grid-auto-flow: column;
+    }
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    padding: var(--s-5);
+    border: 1px solid var(--rule);
+    border-radius: var(--r-md);
+
+    @include up(md) {
+      padding: var(--s-6);
+    }
+  }
+
+  .card--ours {
+    border-color: var(--accent);
+    box-shadow: inset 0 3px 0 var(--accent);
+  }
+
+  .card__name {
+    margin-top: var(--s-3);
+  }
+
+  .card__price {
+    margin-top: var(--s-4);
+    font-family: var(--font-display);
+    font-size: var(--t-stat);
+    line-height: var(--lh-display);
+    letter-spacing: var(--tracking-display);
+    white-space: nowrap;
+    color: var(--fg1);
+  }
+
+  .card__per {
+    margin-left: var(--s-2);
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: normal;
+    color: var(--fg3);
+  }
+
+  .card__line {
+    margin-top: var(--s-2);
+    font-size: var(--t-small);
+  }
+
+  .card__rate {
+    margin-top: var(--s-4);
+    font-family: var(--font-mono);
+    font-size: var(--t-small);
+    font-weight: var(--weight-medium);
+    color: var(--fg1);
+  }
+
+  .card__facts {
+    display: grid;
+    gap: var(--s-2);
+    margin-top: var(--s-4);
+    padding-top: var(--s-4);
+    border-top: 1px solid var(--rule);
+    font-size: var(--t-small);
+    color: var(--fg2);
+  }
+
+  .card__cap {
+    font-weight: var(--weight-medium);
+    color: var(--fg1);
+  }
+
+  .card__foot {
+    margin-top: auto;
+    padding-top: var(--s-6);
+  }
+
+  .card__source {
+    display: grid;
+    gap: var(--s-1);
+    font-size: var(--t-micro);
+
+    span {
+      color: var(--fg3);
+    }
+  }
+
+  .notes {
+    margin-top: var(--s-5);
+
+    p {
+      font-size: var(--t-caption);
+    }
+  }
+</style>

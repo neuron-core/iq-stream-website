@@ -16,6 +16,8 @@ const about: Record<string, string> = {
   [PAGES.home]: `What ${SITE_NAME} is, how stream replay works, and how to integrate it.`,
   [PAGES.performance]: `Benchmark against ${listAnd(COMPETITORS)}: throughput, latency, scaling and memory.`,
   [PAGES.cloud]: 'Offering LLM streaming as a managed, multi-tenant service, with a sizing and cost example.',
+  [PAGES.pricing]:
+    'Shared plans and private regions, priced per concurrent stream with no cap on messages, next to the plans of Pusher and Mercure.',
 };
 
 export const GET: APIRoute = ({ site }) => {

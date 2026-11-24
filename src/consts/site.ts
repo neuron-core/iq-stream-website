@@ -36,10 +36,12 @@ export const PAGES = {
   home: '/',
   performance: '/performance/',
   cloud: '/cloud-providers/',
+  pricing: '/pricing/',
 };
 
 export const NAV = [
   { href: PAGES.home, label: 'Home' },
   { href: PAGES.performance, label: 'Performance' },
   { href: PAGES.cloud, label: 'For cloud providers' },
+  { href: PAGES.pricing, label: 'Pricing' },
 ];
