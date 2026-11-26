@@ -16,7 +16,10 @@ export interface Limits {
   maxStreams: number;
   subscribersPerStream: number;
   eventKiB: number;
-  streamHours: number;
+  /** The longest a stream lasts. */
+  streamMinutes: number;
+  /** The most memory one stream's events take on the server. */
+  streamMiB: number;
 }
 
 /** A paid plan: one app's limits, and the streams and egress its monthly price prepays. */
@@ -36,7 +39,8 @@ export const HOBBY: Plan = {
   maxStreams: 200,
   subscribersPerStream: 2,
   eventKiB: 32,
-  streamHours: 1,
+  streamMinutes: 60,
+  streamMiB: 50,
 };
 
 export const TEAM: Plan = {
@@ -47,7 +51,8 @@ export const TEAM: Plan = {
   maxStreams: 1_000,
   subscribersPerStream: 3,
   eventKiB: 64,
-  streamHours: 2,
+  streamMinutes: 120,
+  streamMiB: 50,
 };
 
 export const BUSINESS: Plan = {
@@ -58,17 +63,19 @@ export const BUSINESS: Plan = {
   maxStreams: 3_000,
   subscribersPerStream: 5,
   eventKiB: 128,
-  streamHours: 3,
+  streamMinutes: 180,
+  streamMiB: 50,
 };
 
 export const PLANS: Plan[] = [HOBBY, TEAM, BUSINESS];
 
 /** One app on a personal team, never billed. Past its egress it pauses until the 1st of the month. */
 export const FREE_APP: Limits & { egressGb: number } = {
-  maxStreams: 10,
+  maxStreams: 5,
   subscribersPerStream: 2,
   eventKiB: 32,
-  streamHours: 1,
+  streamMinutes: 5,
+  streamMiB: 10,
   egressGb: 5,
 };
 
@@ -77,9 +84,6 @@ export const EXTRA_STREAM_CENTS = CENTS.streams_usage;
 
 /** EUR cents for each GB of egress above the prepaid ones: what it costs us, passed on. */
 export const EXTRA_GB_CENTS = CENTS.egress_usage;
-
-/** The most one stream sends, on every plan. */
-export const STREAM_SIZE_MIB = 50;
 
 export interface Month {
   extraStreams: number;

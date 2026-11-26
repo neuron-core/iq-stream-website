@@ -3,8 +3,8 @@
 import Button from '../Button.astro';
 import Panel from '../Panel.astro';
 import { GET_STARTED } from '../../consts/site';
-import { STREAM_SIZE_MIB, prepaidSaving, prepaidStreamCents, type Plan } from '../../consts/pricing';
-import { formatCents, formatGigabytes, formatNumber, formatUnitPrice, plural } from '../../utils/format';
+import { prepaidSaving, prepaidStreamCents, type Plan } from '../../consts/pricing';
+import { formatCents, formatGigabytes, formatMinutes, formatNumber, formatUnitPrice } from '../../utils/format';
 
 interface Props {
   plan: Plan;
@@ -21,8 +21,8 @@ const prepaid = [
 const limits = [
   { value: formatNumber(plan.subscribersPerStream), text: 'subscribers per stream' },
   { value: `${plan.eventKiB} KiB`, text: 'per event' },
-  { value: plural(plan.streamHours, 'hour'), text: 'per stream' },
-  { value: `${STREAM_SIZE_MIB} MiB`, text: 'per stream' },
+  { value: formatMinutes(plan.streamMinutes), text: 'per stream' },
+  { value: `${plan.streamMiB} MiB`, text: 'per stream' },
   { value: 'Private link', text: 'to your VPC' },
   { value: 'No cap', text: 'on messages' },
 ];

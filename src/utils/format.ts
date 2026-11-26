@@ -46,6 +46,10 @@ export const formatGigabytes = (gb: number) =>
 export const plural = (count: number, one: string, many = `${one}s`) =>
   `${formatNumber(count)} ${count === 1 ? one : many}`;
 
+/** Whole hours as hours, others as minutes: 60 → "1 hour", 120 → "2 hours", 5 → "5 minutes", 90 → "90 minutes" */
+export const formatMinutes = (minutes: number) =>
+  minutes % 60 === 0 ? plural(minutes / 60, 'hour') : plural(minutes, 'minute');
+
 /** ["a", "b", "c"] → "a, b and c" */
 export const listAnd = (items: string[]) => and.format(items);
 

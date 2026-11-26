@@ -6,9 +6,9 @@ import Section from '../Section.astro';
 import PriceCard from './PriceCard.astro';
 import { CONTACT, GET_STARTED } from '../../consts/site';
 import { EXTRA_GB_CENTS, EXTRA_STREAM_CENTS, FREE_APP, PLANS } from '../../consts/pricing';
-import { formatGigabytes, formatNumber, formatUnitPrice, plural } from '../../utils/format';
+import { formatGigabytes, formatMinutes, formatNumber, formatUnitPrice } from '../../utils/format';
 
-const free = `${formatNumber(FREE_APP.maxStreams)} concurrent streams, ${formatGigabytes(FREE_APP.egressGb)} of egress a month, ${FREE_APP.subscribersPerStream} subscribers per stream, ${FREE_APP.eventKiB} KiB events and ${plural(FREE_APP.streamHours, 'hour')} per stream.`;
+const free = `${formatNumber(FREE_APP.maxStreams)} concurrent streams of up to ${formatMinutes(FREE_APP.streamMinutes)} and ${FREE_APP.streamMiB} MiB, ${formatGigabytes(FREE_APP.egressGb)} of egress a month, ${FREE_APP.subscribersPerStream} subscribers per stream and ${FREE_APP.eventKiB} KiB events.`;
 ---
 
 <Section id="plans" tone="soft" eyebrow="Plans">
