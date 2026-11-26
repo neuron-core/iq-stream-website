@@ -12,6 +12,11 @@ const rows = [
     iq: `${Math.round(iq.cpuPerEventUs)} µs`,
     other: `${Math.round(other.cpuPerEventUs)} µs`,
   },
+  {
+    label: 'Concurrent runs held on two vCPUs (measured)',
+    iq: formatNumber(iq.runsOnTwoVcpus),
+    other: formatNumber(other.runsOnTwoVcpus),
+  },
   { label: 'CPUs busy relaying', iq: `≈ ${iq.busyCpus.toFixed(1)}`, other: `≈ ${other.busyCpus.toFixed(1)}` },
   {
     label: `vCPUs provisioned at ${SIZING.utilizationPct}% utilization`,
@@ -32,7 +37,6 @@ const rows = [
     other: 'None without replay. Disk for every event with it',
     prose: true,
   },
-  { label: 'p99 latency at the measured load', iq: `${iq.p99Ms} ms`, other: `${other.p99Ms} ms` },
 ];
 ---
 

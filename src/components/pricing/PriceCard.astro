@@ -1,122 +1,72 @@
 ---
-// One plan or size: its price for each interval, which the monthly/annual switch picks between, its
-// limits, the per-stream ones included, and its price per 1,000 streams.
+// One paid plan: the ceiling it unlocks, its monthly price per app, what that prepays, and every limit.
 import Button from '../Button.astro';
 import Panel from '../Panel.astro';
 import { GET_STARTED } from '../../consts/site';
-import {
-  MONTHS_FREE,
-  OVERAGE_CENTS,
-  STREAM_LIMITS,
-  perThousand,
-  type Interval,
-  type Offer,
-} from '../../consts/pricing';
-import { formatCents, formatGigabytes, formatNumber, formatRate } from '../../utils/format';
+import { STREAM_SIZE_MIB, prepaidSaving, prepaidStreamCents, type Plan } from '../../consts/pricing';
+import { formatCents, formatGigabytes, formatNumber, formatUnitPrice, plural } from '../../utils/format';
 
 interface Props {
-  offer: Offer;
+  plan: Plan;
 }
 
-const { offer } = Astro.props;
+const { plan } = Astro.props;
 
-interface Price {
-  /** Null on Free, whose one price shows whichever interval is picked. */
-  interval: Interval | null;
-  amount: string;
-  per: string;
-  note: string;
-  /** EUR a month per 1,000 concurrent streams. */
-  rate: number | null;
-}
-
-const prices: Price[] =
-  offer.cents === null
-    ? [{ interval: null, amount: formatCents(0), per: '/ month', note: 'One per person, on your personal team', rate: null }]
-    : [
-        {
-          interval: 'monthly',
-          amount: formatCents(offer.cents.monthly),
-          per: '/ month',
-          note: `or ${formatCents(offer.cents.annual)} a year, ${MONTHS_FREE} months free`,
-          rate: perThousand(offer, 'monthly'),
-        },
-        {
-          interval: 'annual',
-          amount: formatCents(offer.cents.annual),
-          per: '/ year',
-          note: `${formatCents(offer.cents.annual / 12)} a month, ${MONTHS_FREE} months free`,
-          rate: perThousand(offer, 'annual'),
-        },
-      ];
-
-const audience =
-  offer.kind === 'private' ? 'Any team, on any plan' : offer.personalTeamOnly ? 'Personal teams only' : 'Any team';
-
-const ownLimits =
-  offer.kind === 'shared'
-    ? [
-        { value: formatNumber(offer.apps), text: offer.apps === 1 ? 'app in shared regions' : 'apps in shared regions' },
-        {
-          value: formatNumber(offer.streamsPerApp),
-          text: offer.apps === 1 ? 'concurrent streams' : `concurrent streams per app, ${formatNumber(offer.streams)} in all`,
-        },
-        { value: formatNumber(offer.subscribersPerStream), text: 'subscribers per stream' },
-      ]
-    : [
-        { value: formatNumber(offer.streams), text: 'concurrent streams' },
-        { value: formatGigabytes(offer.egressGb), text: `of egress a month, then ${formatCents(OVERAGE_CENTS)} per GB` },
-      ];
-
-const limits = [
-  ...ownLimits,
-  { value: `${STREAM_LIMITS.sizeMiB} MiB`, text: 'per stream' },
-  { value: `${STREAM_LIMITS.minutes} minutes`, text: 'per stream' },
-  { value: `${STREAM_LIMITS.eventKiB} KiB`, text: 'per event' },
-  { value: 'No cap', text: 'on messages or publishes' },
+const prepaid = [
+  { value: formatNumber(plan.prepaidStreams), text: 'concurrent streams' },
+  { value: formatGigabytes(plan.prepaidEgressGb), text: 'of egress' },
 ];
 
-const cta =
-  offer.cents === null ? GET_STARTED.label : offer.kind === 'shared' ? `Choose ${offer.name}` : `Request ${offer.name}`;
+// The most streams at once is the card's eyebrow, the number a plan is picked by.
+const limits = [
+  { value: formatNumber(plan.subscribersPerStream), text: 'subscribers per stream' },
+  { value: `${plan.eventKiB} KiB`, text: 'per event' },
+  { value: plural(plan.streamHours, 'hour'), text: 'per stream' },
+  { value: `${STREAM_SIZE_MIB} MiB`, text: 'per stream' },
+  { value: 'Private link', text: 'to your VPC' },
+  { value: 'No cap', text: 'on messages' },
+];
 ---
 
 <Panel as="article" class="card">
-  <p class="eyebrow">{audience}</p>
-  <h3>{offer.name}</h3>
-  {
-    prices.map(({ interval, amount, per, note }) => (
-      <div class="card__price" data-interval={interval ?? undefined} hidden={interval === 'annual'}>
-        <p class="card__amount">
-          <span class="card__figure">{amount}</span>
-          <span class="card__per">{per}</span>
-        </p>
-        <p class="card__note">{note}</p>
-      </div>
-    ))
-  }
-  <ul class="card__limits">
-    {
-      limits.map(({ value, text }) => (
-        <li>
-          <strong>{value}</strong> {text}
-        </li>
-      ))
-    }
-  </ul>
+  <p class="eyebrow">Up to {formatNumber(plan.maxStreams)} streams at once</p>
+  <h3>{plan.name}</h3>
+  <p class="card__amount">
+    <span class="card__figure">{formatCents(plan.cents)}</span>
+    <span class="card__per">a month, per app</span>
+  </p>
+
+  <div class="card__group">
+    <p class="label">Includes every month</p>
+    <ul class="card__list">
+      {
+        prepaid.map(({ value, text }) => (
+          <li>
+            <strong>{value}</strong> {text}
+          </li>
+        ))
+      }
+    </ul>
+    <p class="card__note">
+      A prepaid stream costs {formatUnitPrice(prepaidStreamCents(plan))}, {prepaidSaving(plan)}% less than an extra one.
+    </p>
+  </div>
+
+  <div class="card__group">
+    <p class="label">Limits</p>
+    <ul class="card__list">
+      {
+        limits.map(({ value, text }) => (
+          <li>
+            <strong>{value}</strong> {text}
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
   <div class="card__foot">
-    {
-      prices.map(
-        ({ interval, rate }) =>
-          rate !== null && (
-            <p class="card__rate" data-interval={interval ?? undefined} hidden={interval === 'annual'}>
-              {formatRate(rate)} per 1,000 streams a month
-            </p>
-          ),
-      )
-    }
-    <Button href={GET_STARTED.href} variant={offer.cents === null ? 'primary' : 'outline'} class="card__cta">
-      {cta}
-    </Button>
+    <Button href={GET_STARTED.href} variant="outline">Choose {plan.name}</Button>
   </div>
 </Panel>
 
@@ -127,19 +77,13 @@ const cta =
     height: 100%;
   }
 
-  .card__price {
+  .card__amount {
     margin-top: var(--s-5);
   }
 
-  // The period wraps under the amount when a narrow card can't hold "€3,190 / year" on one line.
-  .card__amount {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0 var(--s-2);
-  }
-
+  // The period always sits under the amount, so the three cards' rows line up whatever their prices.
   .card__figure {
+    display: block;
     font-family: var(--font-display);
     font-size: var(--t-stat);
     line-height: var(--lh-display);
@@ -149,37 +93,34 @@ const cta =
   }
 
   .card__per {
+    display: block;
+    margin-top: var(--s-2);
     font-family: var(--font-mono);
     font-size: var(--t-eyebrow);
     color: var(--fg3);
   }
 
-  .card__note {
-    margin-top: var(--s-2);
-    font-size: var(--t-small);
-  }
-
-  .card__limits {
-    display: grid;
-    gap: var(--s-2);
+  .card__group {
     margin-top: var(--s-5);
     padding-top: var(--s-5);
     border-top: 1px solid var(--rule);
+  }
+
+  .card__list {
+    display: grid;
+    gap: var(--s-2);
+    margin-top: var(--s-3);
     font-size: var(--t-body-sm);
     color: var(--fg2);
   }
 
+  .card__note {
+    margin-top: var(--s-3);
+    font-size: var(--t-small);
+  }
+
   .card__foot {
     margin-top: auto;
-    padding-top: var(--s-5);
-  }
-
-  .card__rate {
-    font-family: var(--font-mono);
-    font-size: var(--t-caption);
-  }
-
-  .card__cta {
-    margin-top: var(--s-4);
+    padding-top: var(--s-6);
   }
 </style>

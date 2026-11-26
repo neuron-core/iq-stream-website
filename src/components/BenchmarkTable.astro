@@ -1,95 +1,27 @@
 ---
-import type { Load, ServerKey } from '../consts/benchmark';
-import { formatNumber } from '../utils/format';
-
+// The frame of a benchmark table: title, caption, a sideways-scrolling table, and a note under it.
+// The table itself comes in the default slot, from CapacityTable or LevelTable.
 interface Props {
   title: string;
   caption: string;
-  servers: Record<ServerKey, string>;
-  /** Results keyed by number of concurrent runs. A load may leave out the servers not tested at it. */
-  loads: Record<number, Load>;
+  note?: string;
+  /** For tables with many columns: they start scrolling sideways at a wider width. */
+  wide?: boolean;
   class?: string;
 }
 
-const { title, caption, servers, loads, class: className } = Astro.props;
-const keys = Object.keys(servers) as ServerKey[];
-const columns = 4;
-
-const groups = Object.entries(loads).map(([runs, results]) => ({
-  runs: Number(runs),
-  rows: keys.flatMap((key) => {
-    const result = results[key];
-    return result ? [{ key, result }] : [];
-  }),
-}));
-// The heaviest load every server was tested at.
-const lastShared = Math.max(...groups.filter(({ rows }) => rows.length === keys.length).map(({ runs }) => runs));
-
-const decimal = new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-const cpu = (us: number) => `${decimal.format(us)} µs`;
-const latency = (ms: number) => (ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(2)} s`);
-// Two significant digits under 10, as published: 3.0%, 0.90%.
-const percent = (pct: number) => `${pct < 10 && pct !== 0 ? pct.toPrecision(2) : pct}%`;
-const lost = (pct?: number) => (pct === undefined ? '–' : pct === 0 ? '0' : percent(pct));
+const { title, caption, note, wide = false, class: className } = Astro.props;
 ---
 
-<div class:list={['bench', className]}>
+<div class:list={['bench', { 'bench--wide': wide }, className]}>
   <div class="bench__head">
     <h3>{title}</h3>
     <p class="eyebrow">{caption}</p>
   </div>
   <div class="bench__scroll">
-    <table>
-      <thead>
-        <tr>
-          <th scope="col">Concurrent runs</th>
-          <th scope="col">Server</th>
-          <th scope="col">Events delivered</th>
-          <th scope="col">CPU per event</th>
-          <th scope="col">p99 latency</th>
-          <th scope="col">Lost on reconnect</th>
-        </tr>
-      </thead>
-      {
-        groups.map(({ runs, rows }) => {
-          const untested = rows.length < keys.length;
-          return (
-            <tbody>
-              {rows.map(({ key, result }, index) => (
-                <tr class:list={{ 'is-iq': key === 'iq' }}>
-                  {index === 0 && (
-                    <th scope="rowgroup" rowspan={rows.length + (untested ? 1 : 0)}>
-                      {formatNumber(runs)}
-                    </th>
-                  )}
-                  <td>{servers[key]}</td>
-                  <td>{percent(result.delivered)}</td>
-                  <td>{cpu(result.cpuPerEventUs)}</td>
-                  <td>{latency(result.p99Ms)}</td>
-                  <td>{lost(result.lostPct)}</td>
-                </tr>
-              ))}
-              {untested && (
-                <tr>
-                  <td class="untested" colspan={columns + 1}>
-                    The other servers were not tested at this load: they had already fallen behind
-                    at {formatNumber(lastShared)} concurrent runs or fewer.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          );
-        })
-      }
-    </table>
+    <slot />
   </div>
-  {
-    Astro.slots.has('default') && (
-      <p class="bench__note">
-        <slot />
-      </p>
-    )
-  }
+  {note && <p class="bench__note">{note}</p>}
 </div>
 
 <style lang="scss">
@@ -111,74 +43,97 @@ const lost = (pct?: number) => (pct === undefined ? '–' : pct === 0 ? '0' : pe
     border-top: 1px solid var(--rule-strong);
   }
 
-  table {
-    width: 100%;
-    min-width: var(--table-min);
-    font-size: var(--t-small);
+  // The table comes from the slot, so its styles reach it from here.
+  .bench {
+    :global(table) {
+      width: 100%;
+      min-width: var(--table-min);
+      font-size: var(--t-small);
+    }
+
+    :global(th),
+    :global(td) {
+      padding: var(--s-3) var(--s-4);
+      border-bottom: 1px solid var(--rule);
+      text-align: right;
+      color: var(--fg2);
+    }
+
+    :global(thead th) {
+      vertical-align: bottom;
+      font-family: var(--font-mono);
+      font-size: var(--t-micro);
+      font-weight: var(--weight-medium);
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+    }
+
+    // A header over several columns, such as a machine over its figures.
+    :global(thead th[scope='colgroup']) {
+      text-align: center;
+      color: var(--fg1);
+    }
+
+    :global(td) {
+      font-family: var(--font-mono);
+      font-size: var(--t-caption);
+      white-space: nowrap;
+    }
+
+    // A server's name, and the headers over such names, read as text, left aligned.
+    :global(.start),
+    :global(th[scope='row']) {
+      text-align: left;
+    }
+
+    :global(th[scope='row']) {
+      font-family: var(--font-body);
+      font-size: var(--t-body-sm);
+      font-weight: var(--weight-regular);
+    }
+
+    :global(th[scope='rowgroup']) {
+      vertical-align: top;
+      text-align: left;
+      font-family: var(--font-display);
+      font-size: var(--t-h3);
+      font-weight: var(--weight-regular);
+      line-height: var(--lh-display);
+      letter-spacing: var(--tracking-heading);
+      color: var(--fg1);
+    }
+
+    :global(th[scope='rowgroup'] small) {
+      display: block;
+      margin-top: var(--s-2);
+      font-family: var(--font-mono);
+      font-size: var(--t-micro);
+      letter-spacing: normal;
+      color: var(--fg2);
+    }
+
+    :global(tbody tr:last-child > *),
+    :global(th[scope='rowgroup']) {
+      border-bottom-color: var(--rule-strong);
+    }
+
+    :global(.is-iq > *) {
+      background: var(--paper-soft);
+      font-weight: var(--weight-medium);
+      color: var(--fg1);
+    }
+
+    :global(.is-iq th[scope='row']) {
+      font-weight: var(--weight-semibold);
+    }
   }
 
-  th,
-  td {
-    padding: var(--s-3) var(--s-4);
-    border-bottom: 1px solid var(--rule);
-    text-align: right;
-    color: var(--fg2);
-  }
-
-  thead th {
-    font-family: var(--font-mono);
-    font-size: var(--t-micro);
-    font-weight: var(--weight-medium);
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-  }
-
-  // The first two columns (runs, server) read as labels.
-  th:nth-child(-n + 2),
-  td:first-of-type {
-    text-align: left;
-  }
-
-  td {
-    font-family: var(--font-mono);
-    font-size: var(--t-caption);
-  }
-
-  td:first-of-type {
-    font-family: var(--font-body);
-    font-size: var(--t-body-sm);
-  }
-
-  th[scope='rowgroup'] {
-    vertical-align: top;
-    font-family: var(--font-display);
-    font-size: var(--t-h3);
-    font-weight: var(--weight-regular);
-    line-height: var(--lh-display);
-    letter-spacing: var(--tracking-heading);
-    color: var(--fg1);
-  }
-
-  tbody tr:last-child td,
-  th[scope='rowgroup'] {
-    border-bottom-color: var(--rule-strong);
-  }
-
-  .is-iq td {
-    background: var(--paper-soft);
-    font-weight: var(--weight-medium);
-    color: var(--fg1);
-  }
-
-  .is-iq td:first-of-type {
-    font-weight: var(--weight-semibold);
-  }
-
-  td.untested {
-    font-size: var(--t-caption);
+  .bench--wide :global(table) {
+    min-width: calc(var(--table-min) * 1.3);
   }
 
   .bench__note {
+    max-width: var(--measure-text);
     margin-top: var(--s-4);
     font-size: var(--t-caption);
   }

@@ -1,0 +1,155 @@
+---
+// How usage above a plan's prepaid streams and egress is billed, and a few months worked out with
+// monthOf(), so every amount is the one the cloud app would bill.
+import RuledGrid from '../RuledGrid.astro';
+import Section from '../Section.astro';
+import { BUSINESS, EXTRA_GB_CENTS, EXTRA_STREAM_CENTS, HOBBY, TEAM, monthOf, type Plan } from '../../consts/pricing';
+import { formatCents, formatGigabytes, formatNumber, formatUnitPrice, plural } from '../../utils/format';
+
+const extraStream = formatUnitPrice(EXTRA_STREAM_CENTS);
+const extraGb = formatUnitPrice(EXTRA_GB_CENTS);
+
+const onePast = HOBBY.prepaidStreams + 1;
+const onePastCents = monthOf(HOBBY, onePast, 0).cents;
+
+const rules = [
+  {
+    title: 'Your busiest minute.',
+    text: `Every minute, we count the streams your app runs at once. Above the prepaid ones, the month’s highest count costs ${extraStream} a stream: a peak of ${onePast} on ${HOBBY.name} bills ${formatCents(HOBBY.cents)} + ${extraStream} = ${formatCents(onePastCents)}. Streams that run one after another never add up.`,
+  },
+  {
+    title: 'Egress at cost.',
+    text: `Each GB your app sends above the prepaid ones costs ${extraGb}: what it costs us, passed on with nothing added.`,
+  },
+  {
+    title: 'A ceiling, not a surprise.',
+    text: 'Past your plan’s maximum, new streams are refused, and the peak never bills past it. Your team’s Owner gets an email at 80% and at 100% of each prepaid quota.',
+  },
+];
+
+const examples: { plan: Plan; peak: number; egressGb: number }[] = [
+  { plan: HOBBY, peak: HOBBY.prepaidStreams, egressGb: 20 },
+  { plan: HOBBY, peak: onePast, egressGb: 20 },
+  { plan: TEAM, peak: 650, egressGb: 300 },
+  { plan: BUSINESS, peak: BUSINESS.maxStreams, egressGb: 1_200 },
+];
+
+const months = examples.map(({ plan, peak, egressGb }) => {
+  const month = monthOf(plan, peak, egressGb);
+  const parts = [
+    `${formatCents(plan.cents)} ${plan.name}`,
+    ...(month.extraStreams > 0 ? [`${plural(month.extraStreams, 'extra stream')} × ${extraStream}`] : []),
+    ...(month.extraGb > 0 ? [`${formatNumber(month.extraGb)} GB × ${extraGb}`] : []),
+  ];
+
+  return {
+    plan: plan.name,
+    peak: formatNumber(peak),
+    egress: formatGigabytes(egressGb),
+    total: formatCents(month.cents),
+    sum: parts.length > 1 ? parts.join(' + ') : 'Within the prepaid streams and egress',
+  };
+});
+---
+
+<Section id="usage" eyebrow="Usage">
+  <Fragment slot="title">Billed on your <em>busiest minute</em>.</Fragment>
+  <Fragment slot="aside">
+    <p>
+      We count concurrency, not streams: how many run at the same moment, never how many a day or a month serves. An
+      app’s month starts on the day its plan was bought, and its usage goes on the next invoice.
+    </p>
+  </Fragment>
+
+  <RuledGrid items={rules} min="md" variant="display" />
+
+  <div class="months">
+    <table>
+      <caption class="label">Months, worked out</caption>
+      <thead>
+        <tr>
+          <th scope="col">Plan</th>
+          <th scope="col">Peak streams at once</th>
+          <th scope="col">Egress</th>
+          <th scope="col">The month</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          months.map(({ plan, peak, egress, total, sum }) => (
+            <tr>
+              <th scope="row">{plan}</th>
+              <td>{peak}</td>
+              <td>{egress}</td>
+              <td>
+                <span class="months__total">{total}</span>
+                <span class="months__sum">{sum}</span>
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+</Section>
+
+<style lang="scss">
+  // Below md the table scrolls sideways rather than squeezing the sums.
+  .months {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    min-width: 560px;
+  }
+
+  caption {
+    padding-bottom: var(--s-4);
+    text-align: left;
+  }
+
+  th,
+  td {
+    padding: var(--s-4) var(--s-5) var(--s-4) 0;
+    border-bottom: 1px solid var(--rule);
+    text-align: left;
+    vertical-align: middle;
+    font-family: var(--font-mono);
+    font-size: var(--t-small);
+    font-weight: var(--weight-regular);
+    color: var(--fg2);
+  }
+
+  thead th {
+    font-family: var(--font-body);
+    font-weight: var(--weight-medium);
+    color: var(--fg3);
+  }
+
+  thead tr > *,
+  tbody tr:last-child > * {
+    border-bottom-color: var(--rule-strong);
+  }
+
+  tbody th {
+    font-family: var(--font-body);
+    font-size: var(--t-body-sm);
+    font-weight: var(--weight-medium);
+    color: var(--fg1);
+  }
+
+  .months__total {
+    display: block;
+    font-family: var(--font-display);
+    font-size: var(--t-h4);
+    letter-spacing: var(--tracking-heading);
+    color: var(--fg1);
+  }
+
+  .months__sum {
+    display: block;
+    margin-top: var(--s-1);
+    font-size: var(--t-caption);
+  }
+</style>

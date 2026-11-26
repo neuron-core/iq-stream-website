@@ -14,25 +14,26 @@ import CtaBand from '../components/CtaBand.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import {
   CPU_ADVANTAGE,
-  HISTORY_CPU_COST,
   MERCURE,
-  MERCURE_TWO_CPUS,
+  MERCURE_HISTORY_PEAK,
+  ONE_VCPU,
   REVERB_SHORT,
   SOKETI,
-  TWO_CPU_MULTIPLE,
+  TWO_VCPU_MULTIPLE,
 } from '../consts/benchmark';
 import { ARCHITECTURES, CUSTOMER_STORES } from '../consts/product';
-import { GENERAL_PURPOSE_LIMIT, PLANS, RUNS_ON_ONE_CPU, SIZING } from '../consts/providers';
+import { GENERAL_PURPOSE_LIMIT, PLANS, RUNS_ON_ONE_VCPU, SIZING } from '../consts/providers';
 import { GET_STARTED, PAGES, SITE_NAME } from '../consts/site';
 import { asCode, formatNumber, listAnd, listOr } from '../utils/format';
 
 const architectures = listAnd(asCode(ARCHITECTURES));
-const lightLoad = CPU_ADVANTAGE.atLightLoad.runs;
+// The benchmark's lightest load on one vCPU.
+const lightLoad = ONE_VCPU[0].runs;
 
 const savings = [
   {
     title: 'Fewer servers.',
-    text: `${CPU_ADVANTAGE.overall.min} to ${CPU_ADVANTAGE.overall.max} times less CPU per event than general-purpose servers, and up to ${TWO_CPU_MULTIPLE.reverb} times more events on the same two CPUs.`,
+    text: `${CPU_ADVANTAGE.min} to ${CPU_ADVANTAGE.max} times less CPU per event than general-purpose servers, and up to ${TWO_VCPU_MULTIPLE.reverb} times more events on the same two vCPUs.`,
   },
   {
     title: 'Fewer components.',
@@ -98,7 +99,7 @@ const operations = [
       { label: 'See the numbers →', href: '#margin' },
     ]}
     metrics={[
-      { value: `≈ ${formatNumber(RUNS_ON_ONE_CPU)}`, label: 'Concurrent agent runs on one CPU' },
+      { value: `≈ ${formatNumber(RUNS_ON_ONE_VCPU)}`, label: 'Concurrent agent runs on one vCPU' },
       { value: `< ${GENERAL_PURPOSE_LIMIT}`, label: 'Where general-purpose servers fall behind' },
       { value: '0', label: 'Brokers, databases or disks in the data path' },
     ]}
@@ -121,7 +122,7 @@ const operations = [
     <Fragment slot="aside">
       <p>
         A service like this is priced per customer and run per CPU. {SITE_NAME} serves
-        around {formatNumber(RUNS_ON_ONE_CPU)} concurrent agent runs on a single CPU, where general-purpose servers fall
+        around {formatNumber(RUNS_ON_ONE_VCPU)} concurrent agent runs on a single vCPU, where general-purpose servers fall
         behind before {GENERAL_PURPOSE_LIMIT}, and the margin per customer grows accordingly.
       </p>
       <p>
@@ -131,13 +132,13 @@ const operations = [
       </p>
     </Fragment>
     <CostTable>
-      The comparison is generous to the general-purpose server: it uses its best figure, measured at a load where it
-      still kept up, and assumes it scales linearly with CPUs, which the benchmark shows it does not. {MERCURE} gained
-      only {MERCURE_TWO_CPUS.gainFromSecondCpu}× from a second CPU, and {listAnd([SOKETI, REVERB_SHORT])} lost
-      throughput when scaled out. Adding replay to it makes things much worse: with history on, it
-      costs {HISTORY_CPU_COST} times more CPU per event and could not keep up even with {lightLoad} concurrent runs.
+      Both figures were measured on the same two vCPUs, answering HTTPS, each server at the most concurrent runs it
+      held: {SITE_NAME} with replay, and {MERCURE}, the fastest general-purpose server tested, without it. {listAnd([SOKETI, REVERB_SHORT])}
+      cost two to four times as much CPU per event as {MERCURE}. Adding replay
+      makes things much worse: with history on, {MERCURE} never passed {MERCURE_HISTORY_PEAK} events per second, and could
+      not keep up even with {lightLoad} concurrent runs.
     </CostTable>
-    <ClusterMultiples eyebrow={`And it keeps scaling: on the same two CPUs, ${SITE_NAME} moved`} />
+    <ClusterMultiples eyebrow={`And it keeps scaling: on the same two vCPUs, ${SITE_NAME} moved`} />
     <Block eyebrow="Where the savings come from">
       <RuledGrid items={savings} min="sm" variant="display" />
     </Block>

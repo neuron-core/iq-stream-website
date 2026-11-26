@@ -2,7 +2,7 @@
 import Block from './Block.astro';
 import Grid from './Grid.astro';
 import Stat from './Stat.astro';
-import { MERCURE, REVERB_SHORT, SOKETI, TWO_CPU_MULTIPLE } from '../consts/benchmark';
+import { MERCURE, REVERB_SHORT, SOKETI, TWO_VCPU_MULTIPLE } from '../consts/benchmark';
 
 interface Props {
   eyebrow: string;
@@ -11,15 +11,15 @@ interface Props {
 
 const { eyebrow, class: className } = Astro.props;
 const multiples = [
-  { server: MERCURE, value: TWO_CPU_MULTIPLE.mercure },
-  { server: SOKETI, value: TWO_CPU_MULTIPLE.soketi },
-  { server: REVERB_SHORT, value: TWO_CPU_MULTIPLE.reverb },
+  { server: MERCURE, value: TWO_VCPU_MULTIPLE.mercure },
+  { server: SOKETI, value: TWO_VCPU_MULTIPLE.soketi },
+  { server: REVERB_SHORT, value: TWO_VCPU_MULTIPLE.reverb },
 ];
 ---
 
 <Block eyebrow={eyebrow} class:list={['multiples', className]}>
   <Grid min="sm">
-    {multiples.map(({ server, value }) => <Stat size="lg" value={`${value}×`} label={`what ${server} did`} />)}
+    {multiples.map(({ server, value }) => <Stat size="lg" value={`${value}×`} label={`what ${server} did at most`} />)}
   </Grid>
 </Block>
 

@@ -1,0 +1,49 @@
+---
+// The page's one idea: messages are never capped or counted. One agent's burst of tokens, worked out
+// from AGENT_BURST, beside the daily cap of a service built for chat, and the plan that prepays it.
+import Grid from '../Grid.astro';
+import Section from '../Section.astro';
+import Stat from '../Stat.astro';
+import { SITE_NAME } from '../../consts/site';
+import { AGENT_BURST, BURST_MESSAGES, MESSAGE_CAP, PLANS } from '../../consts/pricing';
+import { formatCents, formatCompact, formatDate, formatGigabytes, formatNumber, formatSource } from '../../utils/format';
+
+const minutes = AGENT_BURST.seconds / 60;
+const plan = PLANS.find(({ prepaidStreams }) => prepaidStreams >= AGENT_BURST.streams);
+
+if (!plan) {
+  throw new Error(`No plan prepays the ${AGENT_BURST.streams} streams of the pricing page’s agent burst.`);
+}
+---
+
+<Section id="messages" eyebrow="Never per message">
+  <Fragment slot="title">We never cap the number of <em>messages</em>.</Fragment>
+  <Fragment slot="aside">
+    <p>
+      Real-time services built for chat and notifications were adapted to agents, not designed for them. They count your
+      messages, or cap how fast you publish: the two numbers an agent streaming tokens runs up fastest.
+    </p>
+    <p>
+      {SITE_NAME} was built from scratch for this one job. It counts how many streams run at once, never what they carry,
+      so you send every token, at any rate.
+    </p>
+  </Fragment>
+
+  <Grid min="sm">
+    <Stat value={formatCompact(BURST_MESSAGES)} label={`Messages in ${minutes} minutes`}>
+      One agent answering {formatNumber(AGENT_BURST.streams)} people at once, at {AGENT_BURST.tokensPerSecond} tokens a
+      second, one message per token.
+    </Stat>
+    <Stat value={formatCompact(MESSAGE_CAP.messagesPerDay)} label="Messages a day">
+      What {MESSAGE_CAP.service} allows on its {MESSAGE_CAP.plan} plan, as <a
+        href={MESSAGE_CAP.url}
+        target="_blank"
+        rel="noopener">{formatSource(MESSAGE_CAP.url)}</a
+      > listed it on {formatDate(MESSAGE_CAP.checkedOn)}.
+    </Stat>
+    <Stat value={formatCents(plan.cents)} label={`A month on ${plan.name}`} accent>
+      {plan.name} prepays {formatNumber(plan.prepaidStreams)} streams at once and {formatGigabytes(plan.prepaidEgressGb)} of
+      egress, and never counts the messages.
+    </Stat>
+  </Grid>
+</Section>

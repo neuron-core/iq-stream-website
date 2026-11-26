@@ -1,14 +1,9 @@
 import type { APIRoute } from 'astro';
-import {
-  COMPETITORS,
-  EVENTS_PER_SECOND,
-  HEADLINE_P99,
-  LOST_ON_RECONNECT,
-  THROUGHPUT_MULTIPLE,
-} from '../consts/benchmark';
+import { COMPETITORS, IQ, LOST_ON_RECONNECT, SETUP, THROUGHPUT_MULTIPLE } from '../consts/benchmark';
+import { HOBBY } from '../consts/pricing';
 import { ARCHITECTURES, FRONTEND_PROTOCOLS, LANGUAGES } from '../consts/product';
 import { CONTACT, GET_STARTED, NAV, PAGES, SITE_NAME, SITE_SUMMARY } from '../consts/site';
-import { formatNumber, listAnd, listOr } from '../utils/format';
+import { formatCents, formatNumber, listAnd, listOr } from '../utils/format';
 
 // /llms.txt, as proposed at llmstxt.org: a Markdown summary of the site for language models.
 
@@ -17,7 +12,7 @@ const about: Record<string, string> = {
   [PAGES.performance]: `Benchmark against ${listAnd(COMPETITORS)}: throughput, latency, scaling and memory.`,
   [PAGES.cloud]: 'Offering LLM streaming as a managed, multi-tenant service, with a sizing and cost example.',
   [PAGES.pricing]:
-    'Shared plans and private regions, priced per concurrent stream with no cap on messages, next to the plans of Pusher and Mercure.',
+    `A plan per app from ${formatCents(HOBBY.cents)} a month, priced by peak concurrent streams and egress, with no cap on messages.`,
 };
 
 export const GET: APIRoute = ({ site }) => {
@@ -30,7 +25,7 @@ export const GET: APIRoute = ({ site }) => {
 - Your backend publishes each chunk of model output over a plain HTTP request, one JSON line per event, from any language: ${listAnd(LANGUAGES)}, or anything that speaks HTTP.
 - Browsers read the stream with the built-in EventSource, with no SDK. ${SITE_NAME} relays events exactly as sent, so it works with ${listOr([...FRONTEND_PROTOCOLS, 'your own format'])}.
 - Replay: ${SITE_NAME} keeps each answer in memory while it is being written. A browser that reconnects resumes from the exact event it missed. ${LOST_ON_RECONNECT} events were lost on reconnect in the benchmark.
-- Performance: ${formatNumber(EVENTS_PER_SECOND.oneCpu)} events per second on one CPU, ${formatNumber(EVENTS_PER_SECOND.twoCpus)} on two, and a p99 latency of ${HEADLINE_P99.ms} ms at ${HEADLINE_P99.runs} concurrent agent runs: more than ${THROUGHPUT_MULTIPLE}× the throughput of general-purpose servers (${listAnd(COMPETITORS)}) on the same CPU.
+- Performance: on ${SETUP.cloud} ${SETUP.processor}, answering HTTPS, ${formatNumber(IQ.oneVcpu.runs)} concurrent agent runs on one vCPU, about ${formatNumber(IQ.oneVcpu.eventsPerSecond)} events per second, and ${formatNumber(IQ.twoVcpus.runs)} on two, ${formatNumber(IQ.twoVcpus.eventsPerSecond)} events per second at ${IQ.twoVcpus.cpuPerEventUs} µs of CPU each, every event on time: ${THROUGHPUT_MULTIPLE.min} to ${THROUGHPUT_MULTIPLE.max}× the throughput of general-purpose servers (${listAnd(COMPETITORS)}) on the same vCPUs.
 - Multi-tenant: separate credentials, limits and live counters for every app on the same servers.
 - One Docker image for ${listAnd(ARCHITECTURES)}. No database, no Redis, no disk and no message broker.
 

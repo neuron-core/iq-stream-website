@@ -3,71 +3,81 @@ import PageHero from '../components/PageHero.astro';
 import Row from '../components/Row.astro';
 import Rows from '../components/Rows.astro';
 import Section from '../components/Section.astro';
-import Comparison from '../components/pricing/Comparison.astro';
+import NoMessageCap from '../components/pricing/NoMessageCap.astro';
 import PricingCards from '../components/pricing/PricingCards.astro';
+import UsageBilling from '../components/pricing/UsageBilling.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { FREE, MONTHS_FREE, OVERAGE_CENTS, PRIVATE_SIZES, PRO, SCALE, centsAMonth } from '../consts/pricing';
+import { BUSINESS, EXTRA_GB_CENTS, EXTRA_STREAM_CENTS, FREE_APP, HOBBY, PLANS } from '../consts/pricing';
 import { CONTACT, GET_STARTED, SITE_NAME } from '../consts/site';
-import { formatCents, formatNumber, listOr, plural } from '../utils/format';
+import { formatCents, formatGigabytes, formatNumber, formatUnitPrice, listOr } from '../utils/format';
 
-const largest = PRIVATE_SIZES[PRIVATE_SIZES.length - 1];
-const cheapestSize = formatCents(Math.min(...PRIVATE_SIZES.map((size) => centsAMonth(size, 'monthly'))));
-const overage = formatCents(OVERAGE_CENTS);
-const free = `${plural(FREE.apps, 'app')} and ${formatNumber(FREE.streams)} concurrent streams`;
+const extraStream = formatUnitPrice(EXTRA_STREAM_CENTS);
+const extraGb = formatUnitPrice(EXTRA_GB_CENTS);
+const planNames = listOr(PLANS.map(({ name }) => name));
+const freeApp = `${formatNumber(FREE_APP.maxStreams)} concurrent streams and ${formatGigabytes(FREE_APP.egressGb)} of egress a month`;
 ---
 
 <BaseLayout
   title="Pricing"
-  description={`${SITE_NAME} pricing: shared plans from free, private regions from ${cheapestSize} a month, priced by concurrent streams with no cap on messages.`}
+  description={`${SITE_NAME} pricing: a plan per app from ${formatCents(HOBBY.cents)} a month, priced by concurrent streams and egress, with no cap on messages.`}
 >
   <PageHero
     eyebrow="Pricing"
-    lead="Start on a shared region, for free. Move to a server of your own when you outgrow it. No plan counts messages, so every token is included."
+    lead={`We never cap the number of messages. A plan prepays concurrent streams and egress for one app. Above them you pay ${extraStream} for each extra concurrent stream at the month’s peak, and ${extraGb} per GB.`}
     actions={[
       { ...GET_STARTED, variant: 'primary' },
-      { label: 'Compare with Pusher and Mercure →', href: '#compare' },
+      { label: 'See the plans →', href: '#plans' },
     ]}
     metrics={[
-      { value: formatCents(centsAMonth(FREE, 'monthly')), label: `${FREE.name}: ${plural(FREE.apps, 'app')}, ${formatNumber(FREE.streams)} concurrent streams` },
-      { value: formatNumber(largest.streams), label: `Concurrent streams on a ${largest.name} private region` },
       { value: '0', label: 'Caps on messages or publishes' },
+      {
+        value: formatCents(HOBBY.cents),
+        label: `A month for an app on ${HOBBY.name}, ${formatNumber(HOBBY.prepaidStreams)} concurrent streams prepaid`,
+      },
+      { value: extraStream, label: 'Per extra concurrent stream, at the month’s peak' },
     ]}
   >
-    <Fragment slot="title">Shared or private. <em>Never per message.</em></Fragment>
+    <Fragment slot="title">Pay for concurrency. <em>Never per message.</em></Fragment>
   </PageHero>
 
-  <Comparison />
+  <NoMessageCap />
 
   <PricingCards />
+
+  <UsageBilling />
 
   <Section id="faq" eyebrow="FAQ">
     <Fragment slot="title">Questions before you <em>pay</em>.</Fragment>
     <Rows>
-      <Row title="What happens past a private region’s egress allowance?">
+      <Row title="Is a plan per app or per team?">
         <p>
-          Each GB past it is {overage}, counted per region and calendar month and billed monthly, on annual terms too:
-          the allowance resets every month. Your team’s Owner and Admins get an email at 80% and at 100% of it. Nothing
-          stops: streams keep flowing.
+          Per app. Each app has its own plan, its own invoice and its own month, which starts on the day you bought its
+          plan. A team can run one app on {HOBBY.name} and another on {BUSINESS.name}.
         </p>
       </Row>
-      <Row title="Do prices include VAT?">
+      <Row title="Who gets the free app?">
         <p>
-          No. Prices are in euros and exclude VAT, which checkout adds where it’s due. Businesses in the EU outside Italy
-          with a valid VAT ID pay none, under the reverse charge.
+          Every account starts with a personal team, and it holds one free app: {freeApp}, never billed. Past that egress
+          it pauses until the 1st. Every other app, and every app of another team, runs on {planNames}.
         </p>
       </Row>
-      <Row title="How do annual terms work?">
+      <Row title="What happens at my plan’s maximum?">
         <p>
-          Annual is {MONTHS_FREE} months free: you pay {12 - MONTHS_FREE} months up front for 12. On a plan, upgrades take
-          effect at once, while downgrades and cancelling wait for the end of the year. An annual private region is a
-          commitment: downsizing or deleting it before renewal gives no credit.
+          New streams are refused until one ends, and the month’s peak never bills past the maximum. Your team’s Owner
+          gets an email at 80% and at 100% of each prepaid quota, so you can move to a larger plan first.
         </p>
       </Row>
-      <Row title={`Who can use ${FREE.name}?`}>
+      <Row title="Can I change plans?">
         <p>
-          Only a personal team, the one every account starts with. You can invite members to it, so a small group can
-          try {SITE_NAME} together. Any other team needs {listOr([PRO.name, SCALE.name])} for apps in shared regions.
-          Private regions are open to every team, {FREE.name} included, and are paid on their own.
+          Yes. An upgrade takes effect at once, and the month’s usage before and after it is measured against each plan’s
+          prepaid streams and egress. A downgrade or a cancellation waits for the end of the month.
+        </p>
+      </Row>
+      <Row title="What is a private link?">
+        <p>
+          Your VPC reaches the region over AWS PrivateLink, at the same URL, so your backend publishes without a NAT
+          gateway or internet egress. AWS bills the endpoint on your account, as it does any PrivateLink endpoint. It comes
+          with every paid plan.
         </p>
       </Row>
     </Rows>
@@ -75,9 +85,9 @@ const free = `${plural(FREE.apps, 'app')} and ${formatNumber(FREE.streams)} conc
 
   <PageHero
     variant="cta"
-    lead={`${free} on your personal team, then ${PRO.name}, ${SCALE.name} or a private region when you need more.`}
+    lead={`${formatNumber(FREE_APP.maxStreams)} concurrent streams on your personal team, then ${planNames} for each app that needs more.`}
     actions={[{ ...GET_STARTED, variant: 'primary' }, CONTACT]}
   >
-    <Fragment slot="title">Start on a shared region, <em>free</em>.</Fragment>
+    <Fragment slot="title">Start with a <em>free</em> app.</Fragment>
   </PageHero>
 </BaseLayout>

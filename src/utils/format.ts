@@ -3,28 +3,34 @@ const and = new Intl.ListFormat('en-GB', { type: 'conjunction' });
 const or = new Intl.ListFormat('en-GB', { type: 'disjunction' });
 const dates = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
-export type Currency = 'EUR' | 'USD';
+const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 });
 
-const money = (amount: number, currency: Currency, digits: number) =>
+const euros = (amount: number, minDigits: number, maxDigits: number) =>
   new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency,
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
+    currency: 'EUR',
+    minimumFractionDigits: minDigits,
+    maximumFractionDigits: maxDigits,
   }).format(amount);
 
 /** 85000 → "85,000" */
 export const formatNumber = (value: number) => numbers.format(value);
 
+/** 4200000 → "4.2M", 4000000 → "4M" */
+export const formatCompact = (value: number) => compact.format(value);
+
 /** Whole amounts without cents, others with two: 15 → "€15", 12.5 → "€12.50", 1690 → "€1,690" */
-export const formatMoney = (amount: number, currency: Currency = 'EUR') =>
-  money(amount, currency, Number.isInteger(amount) ? 0 : 2);
+export const formatMoney = (amount: number) => {
+  const digits = Number.isInteger(amount) ? 0 : 2;
 
-/** A price per unit, always with cents so rates read alike: 50 → "€50.00" */
-export const formatRate = (amount: number, currency: Currency = 'EUR') => money(amount, currency, 2);
+  return euros(amount, digits, digits);
+};
 
-/** EUR cents, as Stripe counts them: 1500 → "€15", 12 → "€0.12" */
+/** EUR cents, as Stripe counts them: 1500 → "€15", 923 → "€9.23" */
 export const formatCents = (cents: number) => formatMoney(cents / 100);
+
+/** A price per unit in EUR cents, with up to three decimals, as the cloud app writes it: 23 → "€0.23", 14.375 → "€0.144" */
+export const formatUnitPrice = (cents: number) => euros(cents / 100, 2, 3);
 
 /** "2026-11-23" → "23 November 2026" */
 export const formatDate = (isoDate: string) => dates.format(new Date(isoDate));

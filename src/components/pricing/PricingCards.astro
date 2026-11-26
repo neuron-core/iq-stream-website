@@ -1,154 +1,75 @@
 ---
-// The plans and sizes, on grey: Free, Pro and Scale, then Small, Medium and Large and what every size
-// includes. The monthly/annual switch changes every card's price.
-import Block from '../Block.astro';
+// The plans, on grey: the free app, Hobby, Team and Business, and a custom plan. Each is one app's.
+import Button from '../Button.astro';
 import Grid from '../Grid.astro';
-import RuledGrid from '../RuledGrid.astro';
 import Section from '../Section.astro';
 import PriceCard from './PriceCard.astro';
-import { SITE_NAME } from '../../consts/site';
-import { MONTHS_FREE, OVERAGE_CENTS, PRIVATE_SIZES, SHARED_PLANS } from '../../consts/pricing';
-import { formatCents, formatGigabytes, listOr } from '../../utils/format';
+import { CONTACT, GET_STARTED } from '../../consts/site';
+import { EXTRA_GB_CENTS, EXTRA_STREAM_CENTS, FREE_APP, PLANS } from '../../consts/pricing';
+import { formatGigabytes, formatNumber, formatUnitPrice, plural } from '../../utils/format';
 
-const allowances = listOr(PRIVATE_SIZES.map(({ egressGb }) => formatGigabytes(egressGb)));
-
-const everySize = [
-  {
-    title: 'A dedicated server.',
-    text: 'No other team’s apps run on it: every stream up to its cap is yours.',
-  },
-  {
-    title: 'Private peering.',
-    text: 'Your backend publishes over a VPC peering with your AWS account, from the same AWS region or another.',
-  },
-  {
-    title: 'Egress included.',
-    text: `${allowances} a month, by size, counted per region and calendar month, on annual terms too.`,
-  },
-  {
-    title: `Then ${formatCents(OVERAGE_CENTS)} per GB.`,
-    text: 'Billed monthly. Your Owner and Admins get an email at 80% and at 100% of the allowance, and nothing stops.',
-  },
-];
+const free = `${formatNumber(FREE_APP.maxStreams)} concurrent streams, ${formatGigabytes(FREE_APP.egressGb)} of egress a month, ${FREE_APP.subscribersPerStream} subscribers per stream, ${FREE_APP.eventKiB} KiB events and ${plural(FREE_APP.streamHours, 'hour')} per stream.`;
 ---
 
-<Section id="plans" tone="soft" eyebrow="Plans and sizes">
-  <Fragment slot="title">Every plan and size, <em>monthly or annually</em>.</Fragment>
+<Section id="plans" tone="soft" eyebrow="Plans">
+  <Fragment slot="title">A plan for each app, <em>monthly</em>.</Fragment>
   <Fragment slot="aside">
-    <p>Pay monthly, or annually with {MONTHS_FREE} months free. Prices are in EUR, before VAT.</p>
-    <fieldset class="interval" aria-label="Billing interval" data-interval-switch>
-      <label class="interval__option">
-        <input type="radio" name="interval" value="monthly" checked />
-        <span>Monthly</span>
-      </label>
-      <label class="interval__option">
-        <input type="radio" name="interval" value="annual" />
-        <span>Annually</span>
-        <span class="interval__save">{MONTHS_FREE} months free</span>
-      </label>
-    </fieldset>
+    <p>
+      Each app has a plan of its own, so one can run on Hobby and another on Business. Pick the plan whose maximum fits
+      your busiest minute: its price prepays streams and egress, and usage covers the rest.
+    </p>
+    <p>
+      Above the prepaid ones, every plan bills {formatUnitPrice(EXTRA_STREAM_CENTS)} for each extra concurrent stream at
+      the month’s peak, and {formatUnitPrice(EXTRA_GB_CENTS)} per GB. Prices are per app, in EUR, before VAT.
+    </p>
   </Fragment>
 
-  <Block
-    eyebrow="Shared regions"
-    lead={`Shared regions are ${SITE_NAME} servers that other teams’ apps run on too. Limits are per app: a plan sets how many apps your team has, and how many streams each of them runs at once.`}
-  >
-    <Fragment slot="title">Your apps, on servers <em>shared</em> among teams.</Fragment>
-    <Grid min="md">
-      {SHARED_PLANS.map((plan) => <PriceCard offer={plan} />)}
-    </Grid>
-  </Block>
+  <div class="plans">
+    <div class="bar">
+      <div>
+        <p class="eyebrow">Free</p>
+        <p class="bar__text"><strong>One app on your personal team, never billed:</strong> {free}</p>
+      </div>
+      <Button href={GET_STARTED.href} variant="primary">{GET_STARTED.label}</Button>
+    </div>
 
-  <Block
-    eyebrow="Private regions"
-    lead={`One ${SITE_NAME} server on AWS that only your team sees and creates apps in. Your backend publishes to it over a VPC peering with your AWS account, never over the internet. Request one from the console: we build it, and billing starts the day it’s ready.`}
-  >
-    <Fragment slot="title">A server of <em>your own</em>.</Fragment>
     <Grid min="md">
-      {PRIVATE_SIZES.map((size) => <PriceCard offer={size} />)}
+      {PLANS.map((plan) => <PriceCard plan={plan} />)}
     </Grid>
-    <Block eyebrow="Every size includes">
-      <RuledGrid items={everySize} min="sm" variant="display" />
-    </Block>
-  </Block>
+
+    <div class="bar">
+      <div>
+        <p class="eyebrow">Custom</p>
+        <p class="bar__text">
+          <strong>For teams shipping agents at scale.</strong> More concurrent streams, longer streams and terms of your
+          own.
+        </p>
+      </div>
+      <Button href={CONTACT.href} variant="dark">{CONTACT.label}</Button>
+    </div>
+  </div>
 </Section>
 
-<script>
-  // The monthly/annual switch: shows every card's price, and price per 1,000 streams, for the interval picked.
-  document.querySelectorAll<HTMLElement>('[data-interval-switch]').forEach((switcher) => {
-    const cards = switcher.closest('section') ?? document;
-
-    const show = () => {
-      const picked = switcher.querySelector<HTMLInputElement>('input:checked')?.value;
-
-      cards.querySelectorAll<HTMLElement>('[data-interval]').forEach((price) => {
-        price.hidden = price.dataset.interval !== picked;
-      });
-    };
-
-    switcher.addEventListener('change', show);
-    show();
-  });
-</script>
-
 <style lang="scss">
-  // Monthly / annually: two radios drawn as one segmented control.
-  .interval {
-    display: inline-flex;
-    gap: var(--s-1);
-    min-inline-size: 0;
-    margin-inline: 0;
-    padding: var(--s-1);
-    border: 1px solid var(--rule-strong);
-    border-radius: var(--r-md);
+  .plans {
+    display: grid;
+    gap: var(--s-6);
   }
 
-  .interval__option {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--s-2);
-    padding: var(--s-2) var(--s-4);
-    border-radius: var(--r-sm);
-    font-size: var(--t-body-sm);
-    font-weight: var(--weight-medium);
-    color: var(--fg2);
-    cursor: pointer;
-    transition: background-color var(--dur-2) var(--ease-quiet);
+  // The free app and the custom plan: one line each, above and below the paid plans.
+  .bar {
+    display: grid;
+    gap: var(--s-4) var(--s-7);
+    padding-block: var(--s-5);
+    border-block: 1px solid var(--rule-strong);
 
-    input {
-      position: absolute;
-      inset: 0;
-      margin: 0;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    &:hover {
-      background: var(--bg-hover);
-      color: var(--fg1);
-    }
-
-    &:has(input:checked) {
-      background: var(--ink);
-      color: var(--paper);
-    }
-
-    &:has(input:focus-visible) {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
+    @include up(md) {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
     }
   }
 
-  .interval__save {
-    font-family: var(--font-mono);
-    font-size: var(--t-micro);
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    color: var(--accent);
-
-    .interval__option:has(input:checked) & {
-      color: var(--orange-glow);
-    }
+  .bar__text {
+    margin-top: var(--s-2);
   }
 </style>

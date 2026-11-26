@@ -1,233 +1,125 @@
-import type { Currency } from '../utils/format';
-
-// The pricing page's plans, sizes and competitors. The page is static: our amounts are written here, by
-// the lookup keys of the billing spec's catalog, so a price changed in Stripe changes here too. Free
-// costs €0.
+// The pricing page's plans and usage prices. The page is static: the amounts are written here, by the
+// lookup keys of the cloud app's Stripe catalog, so a price changed in Stripe changes here too. The
+// limits and prepaid quotas are the plans' rows in the cloud app's database.
 
 /** EUR cents before VAT, by lookup key. */
 const CENTS = {
-  pro_monthly: 1_500,
-  pro_annual: 15_000,
-  scale_monthly: 4_500,
-  scale_annual: 45_000,
-  small_aws_monthly: 9_900,
-  small_aws_annual: 99_000,
-  medium_aws_monthly: 16_900,
-  medium_aws_annual: 169_000,
-  large_aws_monthly: 31_900,
-  large_aws_annual: 319_000,
-  overage_aws: 12,
+  hobby_monthly: 900,
+  team_monthly: 9_900,
+  business_monthly: 29_900,
+  streams_usage: 23,
+  egress_usage: 13,
 } as const;
 
-export type Interval = 'monthly' | 'annual';
-
-/** EUR cents before VAT, for a month and for a year. */
-export type Prices = Record<Interval, number>;
-
-/** An app's limits are its plan's; the plan also sets how many apps a team has in shared regions. */
-export interface SharedPlan {
-  kind: 'shared';
-  key: 'free' | 'pro' | 'scale';
-  name: string;
-  apps: number;
-  streamsPerApp: number;
+/** What one app may run, whatever it pays. */
+export interface Limits {
+  maxStreams: number;
   subscribersPerStream: number;
-  /** Concurrent streams in all: apps × streams per app. */
-  streams: number;
-  /** Free exists only on a personal team. */
-  personalTeamOnly: boolean;
-  /** Null on Free. */
-  cents: Prices | null;
+  eventKiB: number;
+  streamHours: number;
 }
 
-/** A dedicated server on AWS for one team, published to over private peering with its VPC. */
-export interface PrivateSize {
-  kind: 'private';
-  key: 'small' | 'medium' | 'large';
+/** A paid plan: one app's limits, and the streams and egress its monthly price prepays. */
+export interface Plan extends Limits {
   name: string;
-  /** The region's cap on concurrent streams. */
-  streams: number;
-  /** Egress included each month, in GB. */
-  egressGb: number;
-  cents: Prices;
+  /** EUR cents a month, per app. */
+  cents: number;
+  prepaidStreams: number;
+  prepaidEgressGb: number;
 }
 
-export type Offer = SharedPlan | PrivateSize;
-
-const shared = (plan: Omit<SharedPlan, 'kind' | 'streams'>): SharedPlan => ({
-  ...plan,
-  kind: 'shared',
-  streams: plan.apps * plan.streamsPerApp,
-});
-
-export const FREE = shared({
-  key: 'free',
-  name: 'Free',
-  apps: 1,
-  streamsPerApp: 5,
+export const HOBBY: Plan = {
+  name: 'Hobby',
+  cents: CENTS.hobby_monthly,
+  prepaidStreams: 40,
+  prepaidEgressGb: 25,
+  maxStreams: 200,
   subscribersPerStream: 2,
-  personalTeamOnly: true,
-  cents: null,
-});
+  eventKiB: 32,
+  streamHours: 1,
+};
 
-export const PRO = shared({
-  key: 'pro',
-  name: 'Pro',
-  apps: 3,
-  streamsPerApp: 100,
+export const TEAM: Plan = {
+  name: 'Team',
+  cents: CENTS.team_monthly,
+  prepaidStreams: 500,
+  prepaidEgressGb: 250,
+  maxStreams: 1_000,
   subscribersPerStream: 3,
-  personalTeamOnly: false,
-  cents: { monthly: CENTS.pro_monthly, annual: CENTS.pro_annual },
-});
+  eventKiB: 64,
+  streamHours: 2,
+};
 
-export const SCALE = shared({
-  key: 'scale',
-  name: 'Scale',
-  apps: 5,
-  streamsPerApp: 200,
+export const BUSINESS: Plan = {
+  name: 'Business',
+  cents: CENTS.business_monthly,
+  prepaidStreams: 1_500,
+  prepaidEgressGb: 1_000,
+  maxStreams: 3_000,
   subscribersPerStream: 5,
-  personalTeamOnly: false,
-  cents: { monthly: CENTS.scale_monthly, annual: CENTS.scale_annual },
-});
+  eventKiB: 128,
+  streamHours: 3,
+};
 
-export const SHARED_PLANS: SharedPlan[] = [FREE, PRO, SCALE];
+export const PLANS: Plan[] = [HOBBY, TEAM, BUSINESS];
 
-export const PRIVATE_SIZES: PrivateSize[] = [
-  {
-    kind: 'private',
-    key: 'small',
-    name: 'Small',
-    streams: 2_000,
-    egressGb: 250,
-    cents: { monthly: CENTS.small_aws_monthly, annual: CENTS.small_aws_annual },
-  },
-  {
-    kind: 'private',
-    key: 'medium',
-    name: 'Medium',
-    streams: 4_000,
-    egressGb: 500,
-    cents: { monthly: CENTS.medium_aws_monthly, annual: CENTS.medium_aws_annual },
-  },
-  {
-    kind: 'private',
-    key: 'large',
-    name: 'Large',
-    streams: 8_000,
-    egressGb: 1_000,
-    cents: { monthly: CENTS.large_aws_monthly, annual: CENTS.large_aws_annual },
-  },
-];
+/** One app on a personal team, never billed. Past its egress it pauses until the 1st of the month. */
+export const FREE_APP: Limits & { egressGb: number } = {
+  maxStreams: 10,
+  subscribersPerStream: 2,
+  eventKiB: 32,
+  streamHours: 1,
+  egressGb: 5,
+};
 
-/** Free to Large, in rising capacity. */
-export const OFFERS: Offer[] = [...SHARED_PLANS, ...PRIVATE_SIZES];
+/** EUR cents for each concurrent stream above the prepaid ones, at the month's peak. */
+export const EXTRA_STREAM_CENTS = CENTS.streams_usage;
 
-/** EUR cents for each GB of a private region's egress past its allowance, on AWS. */
-export const OVERAGE_CENTS = CENTS.overage_aws;
+/** EUR cents for each GB of egress above the prepaid ones: what it costs us, passed on. */
+export const EXTRA_GB_CENTS = CENTS.egress_usage;
 
-/** The same on every plan and size. */
-export const STREAM_LIMITS = { sizeMiB: 50, minutes: 30, eventKiB: 64 };
+/** The most one stream sends, on every plan. */
+export const STREAM_SIZE_MIB = 50;
+
+export interface Month {
+  extraStreams: number;
+  extraGb: number;
+  /** EUR cents: the plan, the extra streams and the extra egress. */
+  cents: number;
+}
 
 /**
- * The months an annual price saves on twelve monthly ones: 2 while the annual prices are ten monthly
- * ones. The page says it as one number, so the build fails when the prices stop agreeing on it.
+ * What an app's month costs, as the cloud app bills it: the plan's price, each stream of the peak
+ * above the prepaid ones, never past the plan's maximum, and each whole GB above the prepaid ones.
  */
-function monthsFree(): number {
-  const counts = new Set(OFFERS.flatMap(({ cents }) => (cents === null ? [] : [12 - cents.annual / cents.monthly])));
-  const [count] = counts;
+export function monthOf(plan: Plan, peakStreams: number, egressGb: number): Month {
+  const extraStreams = Math.max(0, Math.min(peakStreams, plan.maxStreams) - plan.prepaidStreams);
+  const extraGb = Math.max(0, Math.ceil(egressGb) - plan.prepaidEgressGb);
 
-  if (counts.size !== 1 || !Number.isInteger(count) || count < 1) {
-    throw new Error(
-      'The annual prices no longer save the same whole number of months on every plan and size: the pricing page’s “months free” needs new copy.',
-    );
-  }
-
-  return count;
+  return { extraStreams, extraGb, cents: plan.cents + extraStreams * EXTRA_STREAM_CENTS + extraGb * EXTRA_GB_CENTS };
 }
 
-export const MONTHS_FREE = monthsFree();
+/**
+ * What one prepaid stream costs, in EUR cents: the plan's price, less its prepaid egress at the egress
+ * price, over its prepaid streams. The cloud app's Plan page shows the same.
+ */
+export const prepaidStreamCents = (plan: Plan): number =>
+  (plan.cents - plan.prepaidEgressGb * EXTRA_GB_CENTS) / plan.prepaidStreams;
 
-/** A month's price in EUR cents: the monthly price, or the annual one spread over twelve months. Free is 0. */
-export function centsAMonth(offer: Offer, interval: Interval): number {
-  if (offer.cents === null) {
-    return 0;
-  }
+/** How much less a prepaid stream costs than an extra one, in whole percent rounded down, as the app says it. */
+export const prepaidSaving = (plan: Plan): number =>
+  Math.floor((1 - prepaidStreamCents(plan) / EXTRA_STREAM_CENTS) * 100);
 
-  return interval === 'annual' ? offer.cents.annual / 12 : offer.cents.monthly;
-}
+/** An agent's answers streamed to many people at once, one message per token. */
+export const AGENT_BURST = { streams: 500, tokensPerSecond: 70, seconds: 120 };
 
-/** EUR a month per 1,000 concurrent streams. Null on Free. */
-export const perThousand = (offer: Offer, interval: Interval): number | null =>
-  offer.cents === null ? null : (centsAMonth(offer, interval) / 100) * (1_000 / offer.streams);
+export const BURST_MESSAGES = AGENT_BURST.streams * AGENT_BURST.tokensPerSecond * AGENT_BURST.seconds;
 
-// Competitors, per 1,000 concurrent connections. Ably and PubNub charge per monthly active user, which
-// doesn't turn into concurrent connections without a guess, so they're left out.
-
-/** When every competitor price below was read off its own pricing page. */
-export const CHECKED_ON = '2026-11-23';
-
-export interface CompetitorTier {
-  name: string;
-  /** A month, in the competitor's own currency, before tax. */
-  monthly: number;
-  /** Concurrent connections the tier includes. */
-  connections: number;
-  /** What caps its throughput, as its pricing page lists it. */
-  cap: string;
-}
-
-export interface Competitor {
-  name: string;
-  currency: Currency;
-  /** Its pricing page. */
-  url: string;
-  /** In rising capacity. */
-  tiers: CompetitorTier[];
-}
-
-export const PUSHER: Competitor = {
-  name: 'Pusher Channels',
-  currency: 'USD',
+/** A message cap of a service built for chat and notifications, read off its pricing page. */
+export const MESSAGE_CAP = {
+  service: 'Pusher Channels',
+  plan: 'Pro',
+  messagesPerDay: 4_000_000,
   url: 'https://pusher.com/channels/pricing/',
-  tiers: [
-    { name: 'Sandbox', monthly: 0, connections: 100, cap: '200k messages a day' },
-    { name: 'Startup', monthly: 49, connections: 500, cap: '1M messages a day' },
-    { name: 'Pro', monthly: 99, connections: 2_000, cap: '4M messages a day' },
-    { name: 'Business', monthly: 299, connections: 5_000, cap: '10M messages a day' },
-    { name: 'Premium', monthly: 499, connections: 10_000, cap: '20M messages a day' },
-  ],
+  checkedOn: '2026-11-23',
 };
-
-export const MERCURE: Competitor = {
-  name: 'Mercure Cloud',
-  currency: 'EUR',
-  url: 'https://mercure.rocks/pricing',
-  tiers: [
-    { name: 'Hobby', monthly: 30, connections: 250, cap: '1 publish a second' },
-    { name: 'Pro', monthly: 100, connections: 1_000, cap: '4 publishes a second' },
-    { name: 'Pro+', monthly: 250, connections: 5_000, cap: '20 publishes a second' },
-    { name: 'Pro++', monthly: 500, connections: 10_000, cap: '60 publishes a second' },
-  ],
-};
-
-/** Its free plan alone: compared only where it holds the streams picked. */
-export const SUPABASE: Competitor = {
-  name: 'Supabase Realtime',
-  currency: 'USD',
-  url: 'https://supabase.com/pricing',
-  tiers: [{ name: 'Free', monthly: 0, connections: 200, cap: '2M messages a month' }],
-};
-
-/** Next to our offer at every number of streams: the cheapest tier of each that holds as many connections. */
-export const COMPARED = [PUSHER, MERCURE];
-
-/** Next to it only where their free plan holds the streams, so that our Free sits next to free plans. */
-export const FREE_PLANS_ONLY = [SUPABASE];
-
-/** The cheapest tier that holds this many concurrent connections. */
-export const tierFor = (competitor: Competitor, connections: number): CompetitorTier | undefined =>
-  competitor.tiers.find((tier) => tier.connections >= connections);
-
-/** A tier's price per 1,000 of the connections it includes. Null on a free tier. */
-export const tierPerThousand = ({ monthly, connections }: CompetitorTier): number | null =>
-  monthly === 0 ? null : (monthly * 1_000) / connections;

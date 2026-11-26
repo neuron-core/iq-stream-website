@@ -9,3 +9,6 @@ export const CUSTOMER_STORES = ['PostgreSQL', 'MySQL', 'Redis'];
 
 /** What general-purpose real-time servers carry and IQ-Stream leaves out. */
 export const LEFT_OUT = ['topics', 'channels', 'presence', 'message history', 'broker', 'database'];
+
+/** What a container's memory holds: 4,000-token answers, one AG-UI event per token, kept in full while they run. */
+export const ANSWERS_IN_MEMORY = { containerGb: 2, answers: 1_400, tokensPerAnswer: 4_000 };

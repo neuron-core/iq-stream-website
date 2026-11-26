@@ -1,0 +1,115 @@
+---
+import BenchmarkTable from '../BenchmarkTable.astro';
+import {
+  COMPETITOR_KEYS,
+  DELIVERY_THRESHOLD,
+  HOLD,
+  type IqLevel,
+  type Level,
+  type Measure,
+  type ServerKey,
+} from '../../consts/benchmark';
+import { SITE_NAME } from '../../consts/site';
+import { formatNumber } from '../../utils/format';
+
+// One machine, load by load: the general-purpose servers at each of the benchmark's levels, and IQ-Stream at the
+// most it held, in order of concurrent runs.
+interface Props {
+  title: string;
+  caption: string;
+  servers: Record<ServerKey, string>;
+  levels: Level[];
+  iq: IqLevel;
+  note?: string;
+  class?: string;
+}
+
+const { title, caption, servers, levels, iq, note, class: className } = Astro.props;
+
+// A figure the runs did not report, or Missed for a server too far behind for it to mean anything.
+const NONE = '–';
+const us = (value?: number) => (value === undefined ? NONE : `${value} µs`);
+const latency = (ms: number) => (ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`);
+const missed = ({ delivered, missedPct }: Measure) =>
+  delivered < DELIVERY_THRESHOLD || missedPct === undefined ? NONE : `${missedPct.toFixed(1)}%`;
+
+interface Row {
+  key: ServerKey;
+  cells: string[];
+}
+
+const competitorRows = ({ results }: Level): Row[] =>
+  COMPETITOR_KEYS.map((key) => {
+    const result = results[key];
+    return {
+      key,
+      cells: [
+        `${result.delivered}%`,
+        formatNumber(result.eventsPerSecond),
+        `${result.cpuPct}%`,
+        us(result.cpuPerEventUs),
+        `${result.memoryPerRunKib} KiB`,
+        latency(result.p99Ms),
+        missed(result),
+      ],
+    };
+  });
+
+// IQ-Stream held its level: at least HOLD's share delivered, with a p99 under HOLD's.
+const iqRow: Row = {
+  key: 'iq',
+  cells: [
+    `≥ ${HOLD.deliveredPct}%`,
+    `${iq.approximate ? '≈ ' : ''}${formatNumber(iq.eventsPerSecond)}`,
+    NONE,
+    us(iq.cpuPerEventUs),
+    NONE,
+    `< ${HOLD.p99Ms} ms`,
+    iq.missedPct === undefined ? NONE : iq.missedPct === 0 ? '0' : `${iq.missedPct.toFixed(1)}%`,
+  ],
+};
+
+const groups = [
+  ...levels.map((level) => ({ ...level, isIq: false, rows: competitorRows(level) })),
+  { ...iq, isIq: true, rows: [iqRow] },
+].sort((a, b) => a.runs - b.runs);
+---
+
+<BenchmarkTable title={title} caption={caption} note={note} wide class={className}>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col" class="start">Concurrent runs</th>
+        <th scope="col" class="start">Server</th>
+        <th scope="col">Delivered</th>
+        <th scope="col">Events/s</th>
+        <th scope="col">CPU</th>
+        <th scope="col">CPU per event</th>
+        <th scope="col">Memory per run</th>
+        <th scope="col">p99 latency</th>
+        <th scope="col">Missed</th>
+      </tr>
+    </thead>
+    {
+      groups.map(({ runs, offeredEventsPerSecond, isIq, rows }) => (
+        <tbody>
+          {rows.map(({ key, cells }, index) => (
+            <tr class:list={{ 'is-iq': key === 'iq' }}>
+              {index === 0 && (
+                <th scope="rowgroup" rowspan={rows.length}>
+                  {formatNumber(runs)}
+                  <small>{formatNumber(offeredEventsPerSecond)} events/s offered</small>
+                  {isIq && <small>{SITE_NAME}’s limit</small>}
+                </th>
+              )}
+              <th scope="row">{servers[key]}</th>
+              {cells.map((cell) => (
+                <td>{cell}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      ))
+    }
+  </table>
+</BenchmarkTable>

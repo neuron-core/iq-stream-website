@@ -1,0 +1,54 @@
+---
+import BenchmarkTable from '../BenchmarkTable.astro';
+import { REPLAY, SERVERS, SUMMARY, type Capacity } from '../../consts/benchmark';
+import { formatNumber } from '../../utils/format';
+
+// Every server on both machines: how many concurrent runs it holds, and the most events per second it delivered.
+interface Props {
+  title: string;
+  caption: string;
+  note?: string;
+  class?: string;
+}
+
+const { title, caption, note, class: className } = Astro.props;
+
+const holds = ({ runs, under }: Capacity) => `${under ? 'under ' : ''}${formatNumber(runs)}${under ? '' : ' runs'}`;
+const events = ({ eventsPerSecond, approximate }: Capacity) => `${approximate ? '≈ ' : ''}${formatNumber(eventsPerSecond)}`;
+const cpu = ({ min, max }: { min: number; max: number }) => `${min === max ? min : `${min}–${max}`} µs`;
+---
+
+<BenchmarkTable title={title} caption={caption} note={note} class={className}>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col" rowspan="2" class="start">Server</th>
+        <th scope="colgroup" colspan="2">One vCPU</th>
+        <th scope="colgroup" colspan="2">Two vCPUs</th>
+        <th scope="col" rowspan="2">CPU per event, two vCPUs</th>
+        <th scope="col" rowspan="2">Replay</th>
+      </tr>
+      <tr>
+        <th scope="col">Holds</th>
+        <th scope="col">Most events/s</th>
+        <th scope="col">Holds</th>
+        <th scope="col">Most events/s</th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        SUMMARY.map(({ key, oneVcpu, twoVcpus, cpuPerEventUs }) => (
+          <tr class:list={{ 'is-iq': key === 'iq' }}>
+            <th scope="row">{SERVERS[key]}</th>
+            <td>{holds(oneVcpu)}</td>
+            <td>{events(oneVcpu)}</td>
+            <td>{holds(twoVcpus)}</td>
+            <td>{events(twoVcpus)}</td>
+            <td>{cpu(cpuPerEventUs)}</td>
+            <td>{REPLAY[key] ? 'Yes' : 'No'}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</BenchmarkTable>
