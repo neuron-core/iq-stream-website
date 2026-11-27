@@ -1,6 +1,5 @@
 ---
 import Block from '../components/Block.astro';
-import Chips from '../components/Chips.astro';
 import ClusterMultiples from '../components/ClusterMultiples.astro';
 import FeatureColumns from '../components/FeatureColumns.astro';
 import Grid from '../components/Grid.astro';
@@ -35,7 +34,7 @@ import {
   THROUGHPUT_MULTIPLE,
   TWO_VCPUS,
 } from '../consts/benchmark';
-import { ANSWERS_IN_MEMORY, LEFT_OUT } from '../consts/product';
+import { ANSWERS_IN_MEMORY } from '../consts/product';
 import { GET_STARTED, PAGES, SITE_NAME } from '../consts/site';
 import { formatNumber, listAnd } from '../utils/format';
 
@@ -228,14 +227,6 @@ const symptoms = [
     <Block lead="Put that traffic through a general-purpose server and three things happen:">
       <FeatureColumns items={symptoms} />
     </Block>
-    <Grid min="lg">
-      <Block lead={`${SITE_NAME} was built to remove all three. It keeps every running answer in memory, for as long as it is being written and no longer, so replay costs nothing on the hot path. Just the shortest possible path from your model to your user’s screen.`}>
-        <Fragment slot="title">Doing one thing is what makes it <em>fast</em>.</Fragment>
-      </Block>
-      <Block eyebrow="Nothing else">
-        <Chips items={LEFT_OUT} strike />
-      </Block>
-    </Grid>
   </Section>
 
   <Section id="benchmark" eyebrow="Benchmark">
