@@ -185,7 +185,7 @@ const offered = (runs: number) => {
 export const IQ = {
   version: '1.3.0',
   /** About 27,700 events per second. */
-  oneVcpu: { runs: 650, offeredEventsPerSecond: offered(650), eventsPerSecond: 27_700, approximate: true },
+  oneVcpu: { runs: 700, offeredEventsPerSecond: offered(700), eventsPerSecond: 27_700, approximate: true },
   twoVcpus: {
     runs: 1_100,
     offeredEventsPerSecond: offered(1_100),
