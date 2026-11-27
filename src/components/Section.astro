@@ -5,10 +5,12 @@ interface Props {
   eyebrow?: string;
   /** Lede under the title. */
   lead?: string;
+  /** How the aside lines up with the title beside it: from the top, or centred on it. */
+  align?: 'start' | 'center';
   class?: string;
 }
 
-const { id, tone = 'paper', eyebrow, lead, class: className } = Astro.props;
+const { id, tone = 'paper', eyebrow, lead, align = 'start', class: className } = Astro.props;
 const hasTitle = Astro.slots.has('title');
 const hasAside = Astro.slots.has('aside');
 const hasHead = Boolean(eyebrow || hasTitle || lead);
@@ -18,7 +20,7 @@ const hasHead = Boolean(eyebrow || hasTitle || lead);
   <div class="container">
     {
       hasHead && (
-        <div class:list={['section__head', { 'section__head--split': hasAside }]}>
+        <div class:list={['section__head', { 'section__head--split': hasAside, 'section__head--center': align === 'center' }]}>
           <div>
             {eyebrow && <p class="eyebrow">{eyebrow}</p>}
             {hasTitle && (
@@ -71,6 +73,10 @@ const hasHead = Boolean(eyebrow || hasTitle || lead);
     @include up(lg) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+  }
+
+  .section__head--center {
+    align-items: center;
   }
 
   // minmax(0, 1fr) lets wide tables and code scroll inside their block instead of widening the page.

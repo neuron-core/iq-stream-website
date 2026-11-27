@@ -1,7 +1,6 @@
 ---
 import Block from '../components/Block.astro';
 import Button from '../components/Button.astro';
-import Chips from '../components/Chips.astro';
 import Claim from '../components/Claim.astro';
 import CodeBlock from '../components/CodeBlock.astro';
 import FeatureColumns from '../components/FeatureColumns.astro';
@@ -13,6 +12,7 @@ import RuledGrid from '../components/RuledGrid.astro';
 import Section from '../components/Section.astro';
 import Stat from '../components/Stat.astro';
 import DataPath from '../components/home/DataPath.astro';
+import Libraries from '../components/home/Libraries.astro';
 import NeuronIQ from '../components/home/NeuronIQ.astro';
 import ReplayChart from '../components/home/ReplayChart.astro';
 import CtaBand from '../components/CtaBand.astro';
@@ -30,9 +30,8 @@ import {
   THROUGHPUT_MULTIPLE,
   TWO_VCPU_MULTIPLE,
 } from '../consts/benchmark';
-import { ARCHITECTURES, FRONTEND_PROTOCOLS, LANGUAGES } from '../consts/product';
 import { GET_STARTED, PAGES, SITE_NAME } from '../consts/site';
-import { asCode, formatNumber, listAnd, listOr } from '../utils/format';
+import { formatNumber } from '../utils/format';
 
 const oneVcpu = formatNumber(IQ.oneVcpu.eventsPerSecond);
 // The benchmark's lightest load on one vCPU.
@@ -98,28 +97,6 @@ const contract = [
   },
 ];
 
-const integration = [
-  {
-    title: 'No SDK required in the browser.',
-    text: 'Standard Server-Sent Events, read by the browser’s built-in <code>EventSource</code>.',
-  },
-  {
-    title: 'Any front-end protocol.',
-    text: `${listOr([...FRONTEND_PROTOCOLS, 'your own format'])}: ${SITE_NAME} relays your events exactly as you send them. It never reads or changes what you send.`,
-  },
-  {
-    title: 'Any model, any provider.',
-    text: `${SITE_NAME} sits after the model, so it works with every LLM, hosted or self-hosted.`,
-  },
-  {
-    title: 'Simple, secure tokens.',
-    text: 'Your backend signs short-lived tokens with a few lines of code, in any language: one to publish, one to watch. A watch token can never be used to publish.',
-  },
-  {
-    title: 'One Docker image.',
-    text: `For ${listAnd(asCode(ARCHITECTURES))}. No database, no Redis, no disk and no message broker: everything happens in memory.`,
-  },
-];
 ---
 
 <BaseLayout
@@ -239,26 +216,24 @@ const integration = [
     </Block>
   </Section>
 
-  <Section id="endpoint" eyebrow="One endpoint for any language">
+  <Section id="endpoint" eyebrow="One endpoint for any language" align="center">
     <Fragment slot="title">One endpoint. <em>Any language.</em></Fragment>
-    <Fragment slot="aside">
-      <p>
-        If your backend can make an HTTP request, it can stream through {SITE_NAME}. Publishing is a plain HTTP request with one
-        JSON line per event.
-      </p>
-      <Chips items={LANGUAGES} note="anything that speaks HTTP" />
-    </Fragment>
-    <Grid min="lg">
-      <CodeBlock
-        labels={['in the browser']}
-        description="Browser code: a standard EventSource opened on the watch URL, rendering each message as it arrives."
-      >
-        <div class="tok-c">// standard Server-Sent Events. No SDK.</div>
-        <div><span class="tok-k">const </span>stream<span class="tok-p"> = </span><span class="tok-k">new </span>EventSource<span class="tok-p">(</span>watchUrl<span class="tok-p">);</span></div>
-        <div>stream<span class="tok-p">.</span>onmessage<span class="tok-p"> = (</span>event<span class="tok-p">) =&gt; </span>render<span class="tok-p">(</span>event<span class="tok-p">.</span>data<span class="tok-p">);</span></div>
-      </CodeBlock>
-      <RuledGrid items={integration} />
-    </Grid>
+    <CodeBlock
+      slot="aside"
+      labels={['in the browser']}
+      description="Browser code: a standard EventSource opened on the watch URL, rendering each message as it arrives."
+    >
+      <div class="tok-c">// standard Server-Sent Events. No SDK.</div>
+      <div><span class="tok-k">const </span>stream<span class="tok-p"> = </span><span class="tok-k">new </span>EventSource<span class="tok-p">(</span>watchUrl<span class="tok-p">);</span></div>
+      <div>stream<span class="tok-p">.</span>onmessage<span class="tok-p"> = (</span>event<span class="tok-p">) =&gt; </span>render<span class="tok-p">(</span>event<span class="tok-p">.</span>data<span class="tok-p">);</span></div>
+    </CodeBlock>
+    <Block
+      eyebrow="Official libraries"
+      lead="For PHP, JavaScript and Python, an official library signs the tokens, holds the connection while the model writes and closes each answer for you. Its adapters publish the runs of the most used agent frameworks in a few lines."
+    >
+      <Fragment slot="title">Ready for the <em>framework you use</em>.</Fragment>
+      <Libraries />
+    </Block>
   </Section>
 
   <PageHero

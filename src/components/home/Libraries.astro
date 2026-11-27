@@ -1,0 +1,77 @@
+---
+import { LIBRARIES } from '../../consts/product';
+import Chips from '../Chips.astro';
+
+const linkLabel = { GitHub: 'The repository on GitHub', npm: 'The package on npm' };
+---
+
+<ul class="libraries">
+  {
+    LIBRARIES.map(({ name, install, href, host, text, frameworks }) => (
+      <li class="library">
+        <h3 class="library__name">{name}</h3>
+        <code class="library__install">{install.split(' ').map((word, i) => [i > 0 && ' ', <span>{word}</span>])}</code>
+        <p class="library__text">{text}</p>
+        <div class="library__frameworks">
+          <p class="label">{frameworks.label}</p>
+          <Chips items={frameworks.items} />
+        </div>
+        <a class="library__link" href={href} target="_blank" rel="noopener">
+          {linkLabel[host]} →
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<style lang="scss">
+  // Two columns from lg up, one on phones: the four libraries fill a 2 × 2 grid.
+  .libraries {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(var(--col-lg), 100%), 1fr));
+    column-gap: var(--s-8);
+  }
+
+  // The flex gap spaces the children, so the global flow margins are cleared.
+  .library {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s-4);
+    padding-block: var(--s-6);
+    border-top: 1px solid var(--rule-strong);
+
+    > :global(*) {
+      margin-top: 0;
+    }
+  }
+
+  .library__name {
+    font-size: var(--t-h4);
+  }
+
+  // On narrow screens a long command wraps between words, never inside a package name.
+  .library__install span {
+    white-space: nowrap;
+  }
+
+  .library__text {
+    font-size: var(--t-body-sm);
+  }
+
+  .library__frameworks {
+    display: grid;
+    gap: var(--s-2);
+
+    > :global(*) {
+      margin-top: 0;
+    }
+  }
+
+  // Pushed to the bottom, so the links of a row line up.
+  .library > .library__link {
+    margin-top: auto;
+    font-size: var(--t-body-sm);
+    font-weight: var(--weight-medium);
+  }
+</style>

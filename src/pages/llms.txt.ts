@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { COMPETITORS, IQ, LOST_ON_RECONNECT, SETUP, THROUGHPUT_MULTIPLE } from '../consts/benchmark';
 import { HOBBY } from '../consts/pricing';
-import { ARCHITECTURES, FRONTEND_PROTOCOLS, LANGUAGES } from '../consts/product';
+import { ARCHITECTURES, FRONTEND_PROTOCOLS, LANGUAGES, LIBRARIES } from '../consts/product';
 import { CONTACT, GET_STARTED, NAV, PAGES, SITE_NAME, SITE_SUMMARY } from '../consts/site';
 import { formatCents, formatNumber, listAnd, listOr } from '../utils/format';
 
@@ -32,6 +32,10 @@ export const GET: APIRoute = ({ site }) => {
 ## Pages
 
 ${NAV.map(({ href, label }) => `- [${label}](${url(href)}): ${about[href]}`).join('\n')}
+
+## Official libraries
+
+${LIBRARIES.map(({ name, href, install, text, frameworks }) => `- [${name}](${href}): ${text} ${frameworks.label} ${listAnd(frameworks.items)}. Install with \`${install}\`.`).join('\n')}
 
 ## Get started
 
