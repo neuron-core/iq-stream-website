@@ -39,7 +39,7 @@ if (!plan) {
         href={MESSAGE_CAP.url}
         target="_blank"
         rel="noopener">{formatSource(MESSAGE_CAP.url)}</a
-      > listed it on {formatDate(MESSAGE_CAP.checkedOn)}.
+      >.
     </Stat>
     <Stat value={formatCents(plan.cents)} label={`A month on ${plan.name}`} accent>
       {plan.name} prepays {formatNumber(plan.prepaidStreams)} streams at once and {formatGigabytes(plan.prepaidEgressGb)} of

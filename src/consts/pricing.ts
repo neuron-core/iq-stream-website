@@ -125,5 +125,4 @@ export const MESSAGE_CAP = {
   plan: 'Pro',
   messagesPerDay: 4_000_000,
   url: 'https://pusher.com/channels/pricing/',
-  checkedOn: '2026-11-23',
 };
